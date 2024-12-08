@@ -114,7 +114,7 @@ namespace StarterAssets
         private float nextFireTime = 0f;
         public static int noOfClicks = 0;
         float lastClickedTime = 0;
-        float maxComboDelay = 1;
+        float maxComboDelay = 1f;
 
         private const float _threshold = 0.01f;
 
@@ -291,27 +291,29 @@ namespace StarterAssets
             }
         }
 
-        private void WeakAttackCheck()
-        {
-            if (_hasAnimator)
-            {
-                if (_input.weakAttack)
-                {
-                    _animator.SetTrigger("WeakAttack");
-                    if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
-                    {
-                        Debug.Log("Hit On Beat!!");
-                        beatCenter.HitOnBeat();
-                    }
-                }
-                else
-                {
-                    _animator.ResetTrigger("WeakAttack");
-                }
-            }
-        }
+        //private void WeakAttackCheck()
+        //{
+        //    if (_hasAnimator)
+        //    {
+        //        if (_input.weakAttack)
+        //        {
+        //            _animator.SetTrigger("WeakAttack");
 
-        /*private void WeakAttackCheck()
+        //            if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
+        //            {
+        //                Debug.Log("Hit On Beat!!");
+        //                beatCenter.HitOnBeat();
+
+        //            }
+        //        }
+        //        else
+        //        {
+        //            _animator.ResetTrigger("WeakAttack");
+        //        }
+        //    }
+        //}
+
+        public void WeakAttackCheck()
         {
             if (_hasAnimator)
             {
@@ -346,25 +348,23 @@ namespace StarterAssets
                     {
                         OnClick();
                     }
-                    else
-                    {
-
-                    }
                 }
             }
         }
 
-        private void OnClick()
+        public void OnClick()
         {
             lastClickedTime = Time.time;
             noOfClicks++;
             if (noOfClicks == 1)
             {
                 _animator.SetBool("WeakAttack", true);
+                Debug.Log("WeakAttack!");
                 if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
                 {
                     Debug.Log("Hit On Beat!!");
                     beatCenter.HitOnBeat();
+                    
                 }
             }
             noOfClicks = Mathf.Clamp(noOfClicks, 0, 4);
@@ -373,6 +373,7 @@ namespace StarterAssets
             {
                 _animator.SetBool("WeakAttack", false);
                 _animator.SetBool("Atk2", true);
+                Debug.Log("Atk2!");
                 if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
                 {
                     Debug.Log("Hit On Beat!!");
@@ -384,6 +385,7 @@ namespace StarterAssets
             {
                 _animator.SetBool("Atk2", false);
                 _animator.SetBool("Atk3", true);
+                Debug.Log("Atk3!");
                 if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
                 {
                     Debug.Log("Hit On Beat!!");
@@ -395,13 +397,14 @@ namespace StarterAssets
             {
                 _animator.SetBool("Atk3", false);
                 _animator.SetBool("Atk4", true);
+                Debug.Log("Atk4!");
                 if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
                 {
                     Debug.Log("Hit On Beat!!");
                     beatCenter.HitOnBeat();
                 }
             }
-        }*/
+        }
 
         private void OnTriggerEnter(Collider other)
         {
