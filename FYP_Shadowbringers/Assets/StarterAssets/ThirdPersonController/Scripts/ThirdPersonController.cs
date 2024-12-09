@@ -103,6 +103,10 @@ namespace StarterAssets
         private int _animIDJump;
         private int _animIDFreeFall;
         private int _animIDMotionSpeed;
+        private int _animIDWeakAttack;
+        private int _animIDAtk2;
+        private int _animIDAtk3;
+        private int _animIDAtk4;
 
 #if ENABLE_INPUT_SYSTEM 
         private PlayerInput _playerInput;
@@ -185,6 +189,10 @@ namespace StarterAssets
             _animIDJump = Animator.StringToHash("Jump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+            _animIDWeakAttack = Animator.StringToHash("WeakAttack");
+            _animIDAtk2 = Animator.StringToHash("Atk2");
+            _animIDAtk3 = Animator.StringToHash("Atk3");
+            _animIDAtk4 = Animator.StringToHash("Atk4");
         }
 
         private void GroundedCheck()
@@ -317,24 +325,31 @@ namespace StarterAssets
         {
             if (_hasAnimator)
             {
-                if (_animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f && _animator.GetCurrentAnimatorStateInfo(0).IsName("WeakAttack"))
+                var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+                //Debug.Log($"Current State: {stateInfo.shortNameHash}, Normalized Time: {stateInfo.normalizedTime}");
+
+                if (stateInfo.normalizedTime > 0.7f && stateInfo.IsName("wAttack"))
                 {
-                    _animator.SetBool("WeakAttack", false);
+                    _animator.SetBool(_animIDWeakAttack, false);
+                    Debug.Log("WeakAttack set false");
                 }
 
-                if (_animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f && _animator.GetCurrentAnimatorStateInfo(0).IsName("Atk2"))
+                if (stateInfo.normalizedTime > 0.7f && stateInfo.IsName("Attack2"))
                 {
-                    _animator.SetBool("Atk2", false);
+                    _animator.SetBool(_animIDAtk2, false);
+                    Debug.Log("Atk2 set false");
                 }
 
-                if (_animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f && _animator.GetCurrentAnimatorStateInfo(0).IsName("Atk3"))
+                if (stateInfo.normalizedTime > 0.7f && stateInfo.IsName("Attack3"))
                 {
-                    _animator.SetBool("Atk3", false);
+                    _animator.SetBool(_animIDAtk3, false);
+                    Debug.Log("Atk3 set false");
                 }
 
-                if (_animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f && _animator.GetCurrentAnimatorStateInfo(0).IsName("Atk4"))
+                if (stateInfo.normalizedTime > 0.3f && stateInfo.IsName("Attack4"))
                 {
-                    _animator.SetBool("Atk4", false);
+                    _animator.SetBool(_animIDAtk4, false);
+                    Debug.Log("Atk4 set false");
                     noOfClicks = 0;
                 }
 
@@ -344,7 +359,7 @@ namespace StarterAssets
                 }
                 if (Time.time > nextFireTime)
                 {
-                    if (_input.weakAttack)
+                    if (Input.GetMouseButtonDown(0))
                     {
                         OnClick();
                     }
@@ -354,56 +369,54 @@ namespace StarterAssets
 
         public void OnClick()
         {
+            var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
             lastClickedTime = Time.time;
             noOfClicks++;
-            if (noOfClicks == 1)
-            {
-                _animator.SetBool("WeakAttack", true);
-                Debug.Log("WeakAttack!");
-                if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
-                {
-                    Debug.Log("Hit On Beat!!");
-                    beatCenter.HitOnBeat();
-                    
-                }
-            }
             noOfClicks = Mathf.Clamp(noOfClicks, 0, 4);
 
-            if (noOfClicks >= 2 && _animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f && _animator.GetCurrentAnimatorStateInfo(0).IsName("Atk1"))
+            if (noOfClicks == 1)
             {
-                _animator.SetBool("WeakAttack", false);
-                _animator.SetBool("Atk2", true);
+                _animator.SetBool(_animIDWeakAttack, true);
+                Debug.Log("WeakAttack!");
+
+
+                if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
+                {
+                    Debug.Log("Hit On Beat!!");
+                    beatCenter.HitOnBeat();
+                }
+            }
+            
+            
+            if (noOfClicks >= 2 && stateInfo.normalizedTime > 0.3f && stateInfo.IsName("wAttack"))
+            {
+                _animator.SetBool(_animIDWeakAttack, false);
+                _animator.SetBool(_animIDAtk2, true);
                 Debug.Log("Atk2!");
-                if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
-                {
-                    Debug.Log("Hit On Beat!!");
-                    beatCenter.HitOnBeat();
-                }
+                
             }
 
-            if (noOfClicks >= 3 && _animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f && _animator.GetCurrentAnimatorStateInfo(0).IsName("Atk2"))
+            if (noOfClicks >= 3 && stateInfo.normalizedTime > 0.3f && stateInfo.IsName("Attack2"))
             {
-                _animator.SetBool("Atk2", false);
-                _animator.SetBool("Atk3", true);
+                _animator.SetBool(_animIDAtk2, false);
+                _animator.SetBool(_animIDAtk3, true);
                 Debug.Log("Atk3!");
-                if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
-                {
-                    Debug.Log("Hit On Beat!!");
-                    beatCenter.HitOnBeat();
-                }
+                
             }
 
-            if (noOfClicks >= 4 && _animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f && _animator.GetCurrentAnimatorStateInfo(0).IsName("Atk3"))
+            if (noOfClicks >= 4 && stateInfo.normalizedTime > 0.3f && stateInfo.IsName("Attack3"))
             {
-                _animator.SetBool("Atk3", false);
-                _animator.SetBool("Atk4", true);
+                _animator.SetBool(_animIDAtk3, false);
+                _animator.SetBool(_animIDAtk4, true);
                 Debug.Log("Atk4!");
-                if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
-                {
-                    Debug.Log("Hit On Beat!!");
-                    beatCenter.HitOnBeat();
-                }
+                //if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
+                //{
+                //    Debug.Log("Hit On Beat!!");
+                //    beatCenter.HitOnBeat();
+                //}
             }
+
+            Debug.Log($"noOfClicks =: {noOfClicks}");
         }
 
         private void OnTriggerEnter(Collider other)
