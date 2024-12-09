@@ -364,6 +364,15 @@ namespace StarterAssets
                         OnClick();
                     }
                 }
+
+                if (stateInfo.normalizedTime < 0.1f && stateInfo.IsName("Idle Walk Run Blend"))
+                {
+                    _animator.SetBool(_animIDWeakAttack, false);
+                    _animator.SetBool(_animIDAtk2, false);
+                    _animator.SetBool(_animIDAtk3, false);
+                    _animator.SetBool(_animIDAtk4, false);
+                    Debug.Log("Reset all the AttBool");
+                }
             }
         }
 
