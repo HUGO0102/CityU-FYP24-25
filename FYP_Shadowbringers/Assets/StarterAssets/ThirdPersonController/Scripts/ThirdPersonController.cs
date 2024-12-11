@@ -442,9 +442,13 @@ namespace StarterAssets
             {
                 if (animEvent.Attacking)
                 {
+                    Enemy enemy = other.GetComponent<Enemy>();
                     HitCountManager.Instance.Hit_plus();
                     Debug.Log($"Hitted {other.gameObject.name}");
 
+                    enemy.health -= 1;
+                    enemy.OnHit();
+                    
                     if (beatCenter.HitInBeat)
                     {
                         Debug.Log($"In Beat!");
