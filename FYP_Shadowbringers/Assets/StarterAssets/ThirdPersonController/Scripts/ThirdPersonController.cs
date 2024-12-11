@@ -81,6 +81,7 @@ namespace StarterAssets
         [Header("Manager")]
         public BeatManager beatManager;
         public BeatCenter beatCenter;
+        public PlayerAnimEvent animEvent;
 
         [Header("Attack Setting Value")]
         public float ResetComboFloat = 0.1f;
@@ -162,6 +163,9 @@ namespace StarterAssets
 #else
 			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
 #endif
+
+            animEvent = GetComponent<PlayerAnimEvent>();
+
 
             AssignAnimationIDs();
 
@@ -436,12 +440,15 @@ namespace StarterAssets
         {
             if (other.CompareTag("Enemy"))
             {
-                HitCountManager.Instance.Hit_plus();
-                Debug.Log($"Hitted {other.gameObject.name}");
-
-                if (beatCenter.HitInBeat)
+                if (animEvent.Attacking)
                 {
-                    Debug.Log($"In Beat!");
+                    HitCountManager.Instance.Hit_plus();
+                    Debug.Log($"Hitted {other.gameObject.name}");
+
+                    if (beatCenter.HitInBeat)
+                    {
+                        Debug.Log($"In Beat!");
+                    }
                 }
             }            
         }
