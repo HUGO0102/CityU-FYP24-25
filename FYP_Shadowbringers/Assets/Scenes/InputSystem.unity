@@ -2339,9 +2339,6 @@ MonoBehaviour:
   jump: 0
   sprint: 0
   weakAttack: 0
-  Attack2: 0
-  Attack3: 0
-  Attack4: 0
   analogMovement: 0
   cursorLocked: 1
   cursorInputForLook: 1
@@ -4726,6 +4723,7 @@ MonoBehaviour:
   LockCameraPosition: 0
   beatManager: {fileID: 1785421420}
   beatCenter: {fileID: 1798117077023544864}
+  ResetComboFloat: 0.1
 --- !u!143 &4416926083347132233
 CharacterController:
   m_ObjectHideFlags: 0

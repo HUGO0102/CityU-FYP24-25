@@ -78,8 +78,12 @@ namespace StarterAssets
         public bool LockCameraPosition = false;
 
         [Header("Self-Added")]
+        [Header("Manager")]
         public BeatManager beatManager;
         public BeatCenter beatCenter;
+
+        [Header("Attack Setting Value")]
+        public float ResetComboFloat = 0.1f;
 
         // cinemachine
         private float _cinemachineTargetYaw;
@@ -331,25 +335,25 @@ namespace StarterAssets
                 if (stateInfo.normalizedTime > 0.7f && stateInfo.IsName("wAttack"))
                 {
                     _animator.SetBool(_animIDWeakAttack, false);
-                    Debug.Log("WeakAttack set false");
+                    //Debug.Log("WeakAttack set false");
                 }
 
                 if (stateInfo.normalizedTime > 0.7f && stateInfo.IsName("Attack2"))
                 {
                     _animator.SetBool(_animIDAtk2, false);
-                    Debug.Log("Atk2 set false");
+                    //Debug.Log("Atk2 set false");
                 }
 
                 if (stateInfo.normalizedTime > 0.7f && stateInfo.IsName("Attack3"))
                 {
                     _animator.SetBool(_animIDAtk3, false);
-                    Debug.Log("Atk3 set false");
+                   // Debug.Log("Atk3 set false");
                 }
 
                 if (stateInfo.normalizedTime > 0.3f && stateInfo.IsName("Attack4"))
                 {
                     _animator.SetBool(_animIDAtk4, false);
-                    Debug.Log("Atk4 set false");
+                   // Debug.Log("Atk4 set false");
                     noOfClicks = 0;
                 }
 
@@ -365,13 +369,13 @@ namespace StarterAssets
                     }
                 }
 
-                if (stateInfo.normalizedTime < 0.1f && stateInfo.IsName("Idle Walk Run Blend"))
+                if (stateInfo.normalizedTime < ResetComboFloat && stateInfo.IsName("Idle Walk Run Blend"))
                 {
                     _animator.SetBool(_animIDWeakAttack, false);
                     _animator.SetBool(_animIDAtk2, false);
                     _animator.SetBool(_animIDAtk3, false);
                     _animator.SetBool(_animIDAtk4, false);
-                    Debug.Log("Reset all the AttBool");
+                    //Debug.Log("Reset all the AttBool");
                 }
             }
         }
@@ -381,12 +385,11 @@ namespace StarterAssets
             var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
             lastClickedTime = Time.time;
             noOfClicks++;
-            noOfClicks = Mathf.Clamp(noOfClicks, 0, 4);
 
             if (noOfClicks == 1)
             {
                 _animator.SetBool(_animIDWeakAttack, true);
-                Debug.Log("WeakAttack!");
+                //Debug.Log("WeakAttack!");
 
 
                 if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
@@ -395,13 +398,14 @@ namespace StarterAssets
                     beatCenter.HitOnBeat();
                 }
             }
-            
-            
+
+            noOfClicks = Mathf.Clamp(noOfClicks, 0, 4);
+
             if (noOfClicks >= 2 && stateInfo.normalizedTime > 0.3f && stateInfo.IsName("wAttack"))
             {
                 _animator.SetBool(_animIDWeakAttack, false);
                 _animator.SetBool(_animIDAtk2, true);
-                Debug.Log("Atk2!");
+                //Debug.Log("Atk2!");
                 
             }
 
@@ -409,7 +413,7 @@ namespace StarterAssets
             {
                 _animator.SetBool(_animIDAtk2, false);
                 _animator.SetBool(_animIDAtk3, true);
-                Debug.Log("Atk3!");
+                //Debug.Log("Atk3!");
                 
             }
 
@@ -417,7 +421,7 @@ namespace StarterAssets
             {
                 _animator.SetBool(_animIDAtk3, false);
                 _animator.SetBool(_animIDAtk4, true);
-                Debug.Log("Atk4!");
+                //Debug.Log("Atk4!");
                 //if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
                 //{
                 //    Debug.Log("Hit On Beat!!");
@@ -425,16 +429,19 @@ namespace StarterAssets
                 //}
             }
 
-            Debug.Log($"noOfClicks =: {noOfClicks}");
+            //Debug.Log($"noOfClicks =: {noOfClicks}");
         }
 
         private void OnTriggerEnter(Collider other)
         {
             if (other.CompareTag("Enemy"))
             {
+                HitCountManager.Instance.Hit_plus();
+                Debug.Log($"Hitted {other.gameObject.name}");
+
                 if (beatCenter.HitInBeat)
                 {
-                    Debug.Log($"In Beat & Hitted {other.gameObject.name}");
+                    Debug.Log($"In Beat!");
                 }
             }            
         }
