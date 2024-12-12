@@ -13,6 +13,25 @@ public class BeatManager : MonoBehaviour
     public bool inBeat;
     public float fadeOutBeat;
 
+    public static BeatManager Instance;
+
+    private void Awake()
+    {
+        MakeInstance();
+    }
+    void MakeInstance()
+    {
+        if (Instance == null)
+        {
+            DontDestroyOnLoad(gameObject);
+            Instance = this;
+        }
+        else if (Instance != null)
+        {
+            Destroy(gameObject);
+        }
+    }
+
     private void Update()
     {
         foreach (Intervals interval in _intervals)
