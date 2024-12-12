@@ -3254,8 +3254,8 @@ MonoBehaviour:
     type: 3}
   _leftSpawnPoint: {fileID: 590048902}
   _rightSpawnPoint: {fileID: 1227590948}
-  _moveSpeed: 450
-  _barLifetime: 1.9
+  _moveSpeed: 480
+  _barLifetime: 1.8
   canvas: {fileID: 1349768201}
 --- !u!4 &1736744922
 Transform:
@@ -3369,7 +3369,7 @@ MonoBehaviour:
           m_CallState: 2
     inBeat: 0
   inBeat: 0
-  fadeOutBeat: 0.25
+  fadeOutBeat: 0.35
 --- !u!82 &1785421421
 AudioSource:
   m_ObjectHideFlags: 0
@@ -6680,7 +6680,7 @@ MonoBehaviour:
   beatManager: {fileID: 1785421420}
   beatCenter: {fileID: 1798117077023544864}
   animEvent: {fileID: 0}
-  ResetComboFloat: 0.2
+  ResetComboFloat: 0.1
 --- !u!143 &4416926083347132233
 CharacterController:
   m_ObjectHideFlags: 0

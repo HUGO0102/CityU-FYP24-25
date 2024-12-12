@@ -12,6 +12,27 @@ public class BeatCenter : MonoBehaviour
     public GameObject CurrentHitedRight;
 
     public bool HitInBeat = false;
+
+    public static BeatCenter Instance;
+
+    private void Awake()
+    {
+        MakeInstance();
+    }
+
+    void MakeInstance()
+    {
+        if (Instance == null)
+        {
+            DontDestroyOnLoad(gameObject);
+            Instance = this;
+        }
+        else if (Instance != null)
+        {
+            Destroy(gameObject);
+        }
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("LeftBeatBar"))
