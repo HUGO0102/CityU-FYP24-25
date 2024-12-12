@@ -354,7 +354,7 @@ namespace StarterAssets
                    // Debug.Log("Atk3 set false");
                 }
 
-                if (stateInfo.normalizedTime > 0.3f && stateInfo.IsName("Attack4"))
+                if (stateInfo.normalizedTime > 0.5f && stateInfo.IsName("Attack4"))
                 {
                     _animator.SetBool(_animIDAtk4, false);
                    // Debug.Log("Atk4 set false");
@@ -390,17 +390,16 @@ namespace StarterAssets
             lastClickedTime = Time.time;
             noOfClicks++;
 
+            if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
+            {
+                Debug.Log("Hit On Beat!!");
+                beatCenter.HitOnBeat();
+            }
+
             if (noOfClicks == 1)
             {
                 _animator.SetBool(_animIDWeakAttack, true);
                 //Debug.Log("WeakAttack!");
-
-
-                if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
-                {
-                    Debug.Log("Hit On Beat!!");
-                    beatCenter.HitOnBeat();
-                }
             }
 
             noOfClicks = Mathf.Clamp(noOfClicks, 0, 4);
@@ -448,7 +447,8 @@ namespace StarterAssets
 
                     enemy.health -= 1;
                     enemy.OnHit();
-                    
+                    SFXManager.Instance.PlaySFX("HitSFX");
+
                     if (beatCenter.HitInBeat)
                     {
                         Debug.Log($"In Beat!");

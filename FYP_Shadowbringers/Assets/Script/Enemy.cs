@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using DG.Tweening;
+using System;
 
 public class Enemy : MonoBehaviour
 {
@@ -18,8 +19,8 @@ public class Enemy : MonoBehaviour
 
 
     [Header("WalkAroundSetting")]
-    public Transform patrolCenter; // Center point of the WalkAround area
-    public float patrolRadius = 10f; // Radius of the WalkAround area
+    private Transform patrolCenter; // Center point of the WalkAround area
+    private float patrolRadius; // Radius of the WalkAround area
 
     [Header("Player Detecter")]
     public float detectionRadius = 5f;
@@ -41,9 +42,14 @@ public class Enemy : MonoBehaviour
 
     private bool isChasingPlayer;
 
+    public event Action OnDeath;
+
     // Start is called before the first frame update
     void Start()
     {
+        patrolCenter = EnemyManager.Instance.SpawnCenter;
+
+        patrolRadius = EnemyManager.Instance.spawnRadius;
         agent = GetComponent<NavMeshAgent>();
         Player = GameObject.FindGameObjectWithTag("Player").transform;
 
@@ -109,7 +115,7 @@ public class Enemy : MonoBehaviour
     private void SetNewRandomDestination()
     {
         // Random point within the patrol radius
-        Vector3 randomPoint = patrolCenter.position + Random.insideUnitSphere * patrolRadius;
+        Vector3 randomPoint = patrolCenter.position + UnityEngine.Random.insideUnitSphere * patrolRadius;
 
         // Choose a random point and walk to it
         if (NavMesh.SamplePosition(randomPoint, out NavMeshHit hit, patrolRadius, NavMesh.AllAreas))
@@ -148,6 +154,7 @@ public class Enemy : MonoBehaviour
 
     public void Dead()
     {
+        OnDeath?.Invoke();
         Destroy(gameObject);
     }
 
