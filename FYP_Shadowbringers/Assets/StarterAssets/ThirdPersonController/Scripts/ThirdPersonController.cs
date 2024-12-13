@@ -404,7 +404,7 @@ namespace StarterAssets
 
             noOfClicks = Mathf.Clamp(noOfClicks, 0, 4);
 
-            if (noOfClicks >= 2 && stateInfo.normalizedTime > 0.3f && stateInfo.IsName("wAttack"))
+            if (noOfClicks >= 2 && stateInfo.normalizedTime > 0.1f && stateInfo.IsName("wAttack"))
             {
                 _animator.SetBool(_animIDWeakAttack, false);
                 _animator.SetBool(_animIDAtk2, true);
@@ -412,7 +412,7 @@ namespace StarterAssets
                 
             }
 
-            if (noOfClicks >= 3 && stateInfo.normalizedTime > 0.3f && stateInfo.IsName("Attack2"))
+            if (noOfClicks >= 3 && stateInfo.normalizedTime > 0.1f && stateInfo.IsName("Attack2"))
             {
                 _animator.SetBool(_animIDAtk2, false);
                 _animator.SetBool(_animIDAtk3, true);
@@ -420,7 +420,7 @@ namespace StarterAssets
                 
             }
 
-            if (noOfClicks >= 4 && stateInfo.normalizedTime > 0.3f && stateInfo.IsName("Attack3"))
+            if (noOfClicks >= 4 && stateInfo.normalizedTime > 0.1f && stateInfo.IsName("Attack3"))
             {
                 _animator.SetBool(_animIDAtk3, false);
                 _animator.SetBool(_animIDAtk4, true);
