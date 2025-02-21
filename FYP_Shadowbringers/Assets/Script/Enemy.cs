@@ -89,15 +89,18 @@ public class Enemy : MonoBehaviour
         {
             float distrance = Vector3.Distance(Player.transform.position, transform.position);
 
-            if (distrance >= agent.stoppingDistance)
+            if(agent != null)
             {
-                agent.SetDestination(Player.position);
-            }
-            else
-            {
-                //Enemy is Close to Player
-                //Can Do Enemy Attact Here
-            }
+                if (distrance >= agent.stoppingDistance)
+                {
+                    agent.SetDestination(Player.position);
+                }
+                else
+                {
+                    //Enemy is Close to Player
+                    //Can Do Enemy Attact Here
+                }
+            }     
         }
     }
 

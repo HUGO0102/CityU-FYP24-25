@@ -2,12 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class BeatCenter : MonoBehaviour
 {
     public bool leftBarInCenter;
     public bool rightBarInCenter;
 
+    [Header("DoTween Setting")]
+    [SerializeField] private float scaleMultiplier = 1.2f; // The scale factor for enlarging
+    [SerializeField] private float animationDuration = 0.2f; // Duration for enlarging and shrinking
+
+    private Vector3 originalCenterScale;
+
+    public Image CenterBar;
     public GameObject CurrentHitedLeft;
     public GameObject CurrentHitedRight;
 
@@ -18,6 +26,11 @@ public class BeatCenter : MonoBehaviour
     private void Awake()
     {
         MakeInstance();
+    }
+
+    private void Start()
+    {
+        originalCenterScale = CenterBar.transform.localScale;
     }
 
     void MakeInstance()
@@ -61,13 +74,16 @@ public class BeatCenter : MonoBehaviour
 
     public void HitOnBeat()
     {
-        if(CurrentHitedLeft != null)
+        /*
+        if (CurrentHitedLeft != null)
             ChangeHittedImage(CurrentHitedLeft);
 
         if (CurrentHitedRight != null)
             ChangeHittedImage(CurrentHitedRight);
+            */
 
         AttackHitInBeat();
+        AnimateImage();
     }
 
     private void ChangeHittedImage(GameObject HitedObj)
@@ -75,6 +91,17 @@ public class BeatCenter : MonoBehaviour
         HitedObj.GetComponent<BoxCollider2D>().enabled = false;
         Image HitedImg = HitedObj.GetComponent<Image>();
         HitedImg.color = Color.red;
+    }
+
+    public void AnimateImage()
+    {
+        CenterBar.color = Color.red;
+
+        // Scale up the image in 0.2 seconds, then scale back down smoothly
+        CenterBar.transform.DOScale(originalCenterScale * scaleMultiplier, animationDuration)
+            .OnComplete(() => { CenterBar.transform.DOScale(originalCenterScale, animationDuration);
+                CenterBar.color = Color.white;
+            });
     }
 
     public void AttackHitInBeat()
