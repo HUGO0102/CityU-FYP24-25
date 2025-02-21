@@ -89,7 +89,9 @@ public class Enemy : MonoBehaviour
         {
             float distrance = Vector3.Distance(Player.transform.position, transform.position);
 
-            if(agent != null)
+            NavMeshAgent temp = agent;
+
+            if (temp != null)
             {
                 if (distrance >= agent.stoppingDistance)
                 {
