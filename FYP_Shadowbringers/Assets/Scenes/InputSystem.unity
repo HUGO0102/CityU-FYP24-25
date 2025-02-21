@@ -3174,7 +3174,7 @@ MonoBehaviour:
   sfxList:
   - name: HitSFX
     clip: {fileID: 8300000, guid: 1a860e8f06df5714d88ad9f84eb30c42, type: 3}
-    volume: 1
+    volume: 0.1
 --- !u!4 &1567025503
 Transform:
   m_ObjectHideFlags: 0
@@ -6738,6 +6738,8 @@ MonoBehaviour:
   beatCenter: {fileID: 1798117077023544864}
   animEvent: {fileID: 0}
   ResetComboFloat: 0.1
+  noOfClicks: 0
+  cooldownDuration: 0.5
 --- !u!143 &4416926083347132233
 CharacterController:
   m_ObjectHideFlags: 0
