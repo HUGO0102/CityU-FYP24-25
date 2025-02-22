@@ -148,6 +148,9 @@ public class Enemy : MonoBehaviour
             {
                 SetNewRandomDestination();
                 idleTimer = 0f;
+            } else
+            {
+                enemyAnim.SetBool("isWalking", false);
             }
         }
     }
@@ -186,8 +189,6 @@ public class Enemy : MonoBehaviour
     private void StopChasingPlayer()
     {
         isChasingPlayer = false;
-
-        enemyAnim.SetBool("isWalking", false);
     }
 
 
