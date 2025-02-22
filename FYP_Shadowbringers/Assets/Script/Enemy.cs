@@ -46,6 +46,9 @@ public class Enemy : MonoBehaviour
 
     public event Action OnDeath;
 
+    [Header("AttackSec")]
+    [SerializeField] private float attackSec;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -99,15 +102,26 @@ public class Enemy : MonoBehaviour
             {
                 if (distance >= agent.stoppingDistance)
                 {
+                    enemyAnim.SetBool("isAttack", false);
                     agent.SetDestination(Player.position);
                 }
                 else
                 {
                     //Enemy is Close to Player
-                    //Can Do Enemy Attact Here
+                    //Can Do Enemy Attack Here
+                    enemyAnim.SetBool("isAttack", true);
+                    agent.speed = 0;
+                    StartCoroutine("AttactedThanStartWalk");
                 }
             }     
         }
+    }
+
+    private IEnumerator AttactedThanStartWalk()
+    {
+        yield return new WaitForSeconds(attackSec);
+        agent.speed = startSpeed;
+        Debug.Log("123");
     }
 
     private void StartChasingPlayer()
