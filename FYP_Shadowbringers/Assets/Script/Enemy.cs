@@ -42,6 +42,8 @@ public class Enemy : MonoBehaviour
 
     private bool isChasingPlayer;
 
+    public Animator enemyAnim;
+
     public event Action OnDeath;
 
     // Start is called before the first frame update
@@ -54,13 +56,15 @@ public class Enemy : MonoBehaviour
         Player = GameObject.FindGameObjectWithTag("Player").transform;
 
         enemyRenderer = GetComponent<Renderer>();
-        enemyMaterial = enemyRenderer.material;
-        originalColor = enemyMaterial.color;
+        //enemyMaterial = enemyRenderer.material;
+        //originalColor = enemyMaterial.color;
 
         startSpeed = agent.speed;
         speed = startSpeed;
 
         maxhealth = health;
+
+        //enemyAnim = GetComponent<Animator>();
     }
 
     void Update()
@@ -87,13 +91,13 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-            float distrance = Vector3.Distance(Player.transform.position, transform.position);
+            float distance = Vector3.Distance(Player.transform.position, transform.position);
 
             NavMeshAgent temp = agent;
 
             if (temp != null)
             {
-                if (distrance >= agent.stoppingDistance)
+                if (distance >= agent.stoppingDistance)
                 {
                     agent.SetDestination(Player.position);
                 }
@@ -109,6 +113,9 @@ public class Enemy : MonoBehaviour
     private void StartChasingPlayer()
     {
         isChasingPlayer = true;
+
+        enemyAnim.SetBool("isWalking", true);
+
 
         // Rotate to face the player
         Vector3 directionToPlayer = (Player.position - transform.position).normalized;
@@ -126,6 +133,7 @@ public class Enemy : MonoBehaviour
         if (NavMesh.SamplePosition(randomPoint, out NavMeshHit hit, patrolRadius, NavMesh.AllAreas))
         {
             targetPosition = hit.position;
+            enemyAnim.SetBool("isWalking", true);
             agent.SetDestination(targetPosition);
         }
     }
@@ -148,13 +156,13 @@ public class Enemy : MonoBehaviour
     /// Call whem getting hit
     /// </summary>
     public void OnHit()
-    {
+    {/*
         // Change the color to red
         enemyMaterial.DOColor(hitColor, "_BaseColor", colorChangeDuration) 
             .OnComplete(() =>
             {
                 enemyMaterial.DOColor(originalColor, "_BaseColor", colorChangeDuration);
-            });
+            });*/
     }
 
     public void Dead()
@@ -178,6 +186,8 @@ public class Enemy : MonoBehaviour
     private void StopChasingPlayer()
     {
         isChasingPlayer = false;
+
+        enemyAnim.SetBool("isWalking", false);
     }
 
 
