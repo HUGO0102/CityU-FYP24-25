@@ -16,6 +16,7 @@ namespace StarterAssets
 		//public bool Attack2;
 		//public bool Attack3;
 		//public bool Attack4;
+		public bool isDodge;
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -67,6 +68,11 @@ namespace StarterAssets
 		{
 			Attack4Input(value.isPressed);
 		}*/
+
+		public void OnDodge(InputValue value)
+		{
+			DodgeInput(value.isPressed);
+		}
 #endif
 
 
@@ -109,6 +115,11 @@ namespace StarterAssets
 		{
 			Attack4 = newAttack4State;
 		}*/
+
+		public void DodgeInput(bool newisDodgeState)
+		{
+			isDodge = newisDodgeState;
+		}
 
 		private void OnApplicationFocus(bool hasFocus)
 		{

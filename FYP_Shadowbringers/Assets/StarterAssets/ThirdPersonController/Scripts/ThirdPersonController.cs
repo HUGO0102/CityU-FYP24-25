@@ -112,6 +112,7 @@ namespace StarterAssets
         private int _animIDAtk2;
         private int _animIDAtk3;
         private int _animIDAtk4;
+        private int _animIDisDodge;
 
 #if ENABLE_INPUT_SYSTEM 
         private PlayerInput _playerInput;
@@ -184,6 +185,7 @@ namespace StarterAssets
             GroundedCheck();
             Move();
             WeakAttackCheck();
+            Dodge();
 
         }
 
@@ -203,6 +205,7 @@ namespace StarterAssets
             _animIDAtk2 = Animator.StringToHash("Atk2");
             _animIDAtk3 = Animator.StringToHash("Atk3");
             _animIDAtk4 = Animator.StringToHash("Atk4");
+            _animIDisDodge = Animator.StringToHash("isDodge");
         }
 
         private void GroundedCheck()
@@ -330,6 +333,11 @@ namespace StarterAssets
         //        }
         //    }
         //}
+
+        public void Dodge()
+        {
+            _animator.SetTrigger(_animIDisDodge);
+        }
 
         public void WeakAttackCheck()
         {
