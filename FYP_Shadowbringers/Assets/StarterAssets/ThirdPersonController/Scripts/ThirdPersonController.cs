@@ -86,6 +86,9 @@ namespace StarterAssets
         [Header("Attack Setting Value")]
         public float ResetComboFloat = 0.1f;
 
+        [Header("Dodge State")]
+        public float DodgeSpeedSec;
+
         // cinemachine
         private float _cinemachineTargetYaw;
         private float _cinemachineTargetPitch;
@@ -186,7 +189,6 @@ namespace StarterAssets
             Move();
             WeakAttackCheck();
             Dodge();
-
         }
 
         private void LateUpdate()
@@ -336,7 +338,29 @@ namespace StarterAssets
 
         public void Dodge()
         {
-            _animator.SetTrigger(_animIDisDodge);
+            var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+
+            if (stateInfo.normalizedTime > .7f && stateInfo.IsName("Dodge"))
+            {
+                Debug.Log("asd");
+                _input.Dodge = false;
+                _animator.SetBool(_animIDisDodge, false);
+            }
+
+            if (_input.Dodge)
+            {
+                _animator.SetBool(_animIDisDodge, true);
+            }
+        }
+
+        private void DodgeTimer()
+        {
+            var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+
+            if (stateInfo.normalizedTime > 1f && stateInfo.IsName("Dodge"))
+            {
+                _animator.SetBool(_animIDisDodge, false);
+            }
         }
 
         public void WeakAttackCheck()
@@ -376,7 +400,7 @@ namespace StarterAssets
                 }
                 if (Time.time > nextFireTime)
                 {
-                    if (Input.GetMouseButtonDown(0))
+                    if (Input.GetMouseButtonDown(0) || _input.weakAttack)
                     {
                         OnClick();
                     }
@@ -439,17 +463,8 @@ namespace StarterAssets
                 {
                     _animator.SetBool(_animIDAtk3, false);
                     _animator.SetBool(_animIDAtk4, true);
-                    //Debug.Log("Atk4!");
-                    //if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
-                    //{
-                    //    Debug.Log("Hit On Beat!!");
-                    //    beatCenter.HitOnBeat();
-                    //}
                 }
-
-                //Debug.Log($"noOfClicks =: {noOfClicks}");
             }
-
         }
 
         private void ResetAttackBooleans()
