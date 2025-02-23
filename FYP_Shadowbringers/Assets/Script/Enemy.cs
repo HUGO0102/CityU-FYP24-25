@@ -121,7 +121,6 @@ public class Enemy : MonoBehaviour
     {
         yield return new WaitForSeconds(attackSec);
         agent.speed = startSpeed;
-        Debug.Log("123");
     }
 
     private void StartChasingPlayer()
