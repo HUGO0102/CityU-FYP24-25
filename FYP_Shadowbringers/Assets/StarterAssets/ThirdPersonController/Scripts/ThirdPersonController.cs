@@ -86,8 +86,9 @@ namespace StarterAssets
         [Header("Attack Setting Value")]
         public float ResetComboFloat = 0.1f;
 
-        [Header("Dodge State")]
-        public float DodgeSpeedSec;
+        [Header("DodgeSpeed")]
+        public float dashSpeed;
+        private Rigidbody rig;
 
         // cinemachine
         private float _cinemachineTargetYaw;
@@ -171,7 +172,7 @@ namespace StarterAssets
 #endif
 
             animEvent = GetComponent<PlayerAnimEvent>();
-
+            rig = GetComponent<Rigidbody>();
 
             AssignAnimationIDs();
 
@@ -342,25 +343,39 @@ namespace StarterAssets
 
             if (stateInfo.normalizedTime > .7f && stateInfo.IsName("Dodge"))
             {
-                Debug.Log("asd");
                 _input.Dodge = false;
                 _animator.SetBool(_animIDisDodge, false);
             }
 
             if (_input.Dodge)
             {
+                //rig.AddForce(-transform.forward * dashSpeed, ForceMode.Impulse);
+                //transform.position -= transform.forward * dashSpeed;
                 _animator.SetBool(_animIDisDodge, true);
             }
         }
 
-        private void DodgeTimer()
+        public void DodgeOnAnimEvent()
         {
             var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+            StartCoroutine(SmoothJumpBackward(dashSpeed, stateInfo.length / stateInfo.speed));
+        }
 
-            if (stateInfo.normalizedTime > 1f && stateInfo.IsName("Dodge"))
+        IEnumerator SmoothJumpBackward(float dashSpeed, float duration)
+        {
+            Vector3 startPosition = transform.position;
+            Vector3 targetPosition = transform.position - transform.forward * dashSpeed;
+
+            float elapsedTime = 0f;
+
+            while (elapsedTime < duration)
             {
-                _animator.SetBool(_animIDisDodge, false);
+                transform.position = Vector3.Lerp(startPosition, targetPosition, elapsedTime / duration);
+                elapsedTime += Time.deltaTime;
+                yield return null;
             }
+
+            transform.position = targetPosition; // Ensure the position is set exactly to the target
         }
 
         public void WeakAttackCheck()
