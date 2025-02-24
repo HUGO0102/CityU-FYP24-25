@@ -86,6 +86,10 @@ namespace StarterAssets
         [Header("Attack Setting Value")]
         public float ResetComboFloat = 0.1f;
 
+        [Header("DodgeSpeed")]
+        public float dashSpeed;
+        private Rigidbody rig;
+
         // cinemachine
         private float _cinemachineTargetYaw;
         private float _cinemachineTargetPitch;
@@ -168,7 +172,7 @@ namespace StarterAssets
 #endif
 
             animEvent = GetComponent<PlayerAnimEvent>();
-
+            rig = GetComponent<Rigidbody>();
 
             AssignAnimationIDs();
 
@@ -186,7 +190,6 @@ namespace StarterAssets
             Move();
             WeakAttackCheck();
             Dodge();
-
         }
 
         private void LateUpdate()
@@ -336,7 +339,43 @@ namespace StarterAssets
 
         public void Dodge()
         {
-            _animator.SetTrigger(_animIDisDodge);
+            var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+
+            if (stateInfo.normalizedTime > .7f && stateInfo.IsName("Dodge"))
+            {
+                _input.Dodge = false;
+                _animator.SetBool(_animIDisDodge, false);
+            }
+
+            if (_input.Dodge)
+            {
+                //rig.AddForce(-transform.forward * dashSpeed, ForceMode.Impulse);
+                //transform.position -= transform.forward * dashSpeed;
+                _animator.SetBool(_animIDisDodge, true);
+            }
+        }
+
+        public void DodgeOnAnimEvent()
+        {
+            var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+            StartCoroutine(SmoothJumpBackward(dashSpeed, stateInfo.length / stateInfo.speed));
+        }
+
+        IEnumerator SmoothJumpBackward(float dashSpeed, float duration)
+        {
+            Vector3 startPosition = transform.position;
+            Vector3 targetPosition = transform.position - transform.forward * dashSpeed;
+
+            float elapsedTime = 0f;
+
+            while (elapsedTime < duration)
+            {
+                transform.position = Vector3.Lerp(startPosition, targetPosition, elapsedTime / duration);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            transform.position = targetPosition; // Ensure the position is set exactly to the target
         }
 
         public void WeakAttackCheck()
@@ -376,7 +415,7 @@ namespace StarterAssets
                 }
                 if (Time.time > nextFireTime)
                 {
-                    if (Input.GetMouseButtonDown(0))
+                    if (Input.GetMouseButtonDown(0) || _input.weakAttack)
                     {
                         OnClick();
                     }
@@ -439,17 +478,8 @@ namespace StarterAssets
                 {
                     _animator.SetBool(_animIDAtk3, false);
                     _animator.SetBool(_animIDAtk4, true);
-                    //Debug.Log("Atk4!");
-                    //if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
-                    //{
-                    //    Debug.Log("Hit On Beat!!");
-                    //    beatCenter.HitOnBeat();
-                    //}
                 }
-
-                //Debug.Log($"noOfClicks =: {noOfClicks}");
             }
-
         }
 
         private void ResetAttackBooleans()
