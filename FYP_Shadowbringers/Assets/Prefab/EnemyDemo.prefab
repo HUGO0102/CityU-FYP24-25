@@ -1146,16 +1146,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d981c4d5a1014174785ab4fd895ff7df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyType: 0
   agent: {fileID: 6400312472254573601}
   health: 5
-  startSpeed: 0
-  speed: 0
-  detectionRadius: 10
+  meleeDetectionRadius: 10
+  rangedDetectionRadius: 15
   enemyRenderer: {fileID: 0}
   hitColor: {r: 1, g: 0, b: 0, a: 1}
   colorChangeDuration: 0.1
   enemyAnim: {fileID: 6400312472254573614}
-  attackSec: 4
+  StopMovingAttacGap: 4
+  projectilePrefab: {fileID: 0}
+  projectileSpawnPoint: {fileID: 0}
+  BulletSpeed: 20
+  ShootingGapSec: 3
 --- !u!136 &6400312472254573603
 CapsuleCollider:
   m_ObjectHideFlags: 0

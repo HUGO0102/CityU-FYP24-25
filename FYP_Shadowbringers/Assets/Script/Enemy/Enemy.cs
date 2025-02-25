@@ -7,6 +7,16 @@ using System;
 
 public class Enemy : MonoBehaviour
 {
+
+    public enum EnemyType
+    {
+        Melee,
+        Ranged
+    }
+
+    [Header("Enemy Type")]
+    public EnemyType enemyType = EnemyType.Melee; // Default to Melee
+
     [Header("Manger")]
     public NavMeshAgent agent;
 
@@ -14,8 +24,8 @@ public class Enemy : MonoBehaviour
     public float health = 5;
     private float maxhealth;
 
-    public float startSpeed;
-    public float speed;
+    private float startSpeed;
+    private float speed;
 
 
     [Header("WalkAroundSetting")]
@@ -23,7 +33,8 @@ public class Enemy : MonoBehaviour
     private float patrolRadius; // Radius of the WalkAround area
 
     [Header("Player Detecter")]
-    public float detectionRadius = 5f;
+    public float meleeDetectionRadius = 10f;
+    public float rangedDetectionRadius = 15f;
 
     [Header("Render")]
     public Renderer enemyRenderer; //Enemy's Renderer component
@@ -46,9 +57,17 @@ public class Enemy : MonoBehaviour
 
     public event Action OnDeath;
 
-    [Header("AttackSec")]
-    [SerializeField] private float attackSec;
+    [Header("Melee Attack Settings")]
+    [SerializeField] private float StopMovingAttacGap = 4f;
 
+    [Header("Range Enemy Setting")]
+    [SerializeField] private GameObject projectilePrefab;
+    [SerializeField] private Transform projectileSpawnPoint;
+    [SerializeField] private float BulletSpeed = 20;
+    [SerializeField] private float ShootingGapSec = 3f;
+    private float FixShootingGapSec;
+
+    private bool isShooted;
     // Start is called before the first frame update
     void Start()
     {
@@ -65,6 +84,8 @@ public class Enemy : MonoBehaviour
         startSpeed = agent.speed;
         speed = startSpeed;
 
+        FixShootingGapSec = ShootingGapSec;
+
         maxhealth = health;
 
         //enemyAnim = GetComponent<Animator>();
@@ -77,8 +98,23 @@ public class Enemy : MonoBehaviour
             Dead();
         }
 
-        // Check if the player is walked in the detection radius
-        if (PlayerInDetectionRadius())
+        switch (enemyType)
+        {
+            case EnemyType.Melee:
+                MeleeBehavior();
+                break;
+
+            case EnemyType.Ranged:
+                RangedBehavior();
+                ShootTimer();
+                break;
+        }    
+    }
+
+    private void MeleeBehavior()
+    {
+        // Check if the player is walked in the mele detection radius
+        if (PlayerInDetectionRadius(meleeDetectionRadius))
         {
             StartChasingPlayer();
         }
@@ -102,40 +138,142 @@ public class Enemy : MonoBehaviour
             {
                 if (distance >= agent.stoppingDistance)
                 {
-                    enemyAnim.SetBool("isAttack", false);
+                    if (enemyAnim != null)
+                        enemyAnim.SetBool("isAttack", false);
                     agent.SetDestination(Player.position);
                 }
                 else
                 {
                     //Enemy is Close to Player
                     //Can Do Enemy Attack Here
-                    enemyAnim.SetBool("isAttack", true);
+                    if (enemyAnim != null)
+                        enemyAnim.SetBool("isAttack", true);
                     agent.speed = 0;
-                    StartCoroutine("AttactedThanStartWalk");
+                    StartCoroutine(AttactedThanStartWalk());
                 }
-            }     
+            }
         }
     }
 
     private IEnumerator AttactedThanStartWalk()
     {
-        yield return new WaitForSeconds(attackSec);
+        yield return new WaitForSeconds(StopMovingAttacGap);
         agent.speed = startSpeed;
+    }
+
+    private void RangedBehavior()
+    {
+        // Check if the player is within ranged detection radius
+        if (PlayerInDetectionRadius(rangedDetectionRadius))
+        {
+            StartChasingPlayer();
+        }
+        else
+        {
+            StopChasingPlayer();
+        }
+
+        if (isChasingPlayer)
+        {
+            float distance = Vector3.Distance(Player.transform.position, transform.position);
+
+            if (distance > rangedDetectionRadius - 5)
+            {
+                // Chase the player but maintain a distance
+                agent.SetDestination(Player.position);
+                agent.speed = startSpeed;
+
+                if (enemyAnim != null)
+                    enemyAnim.SetBool("isAttack", false);
+
+                StopShooting();
+            }
+            else
+            {
+                // Stop and attack the player from a distance
+                agent.speed = 0;
+
+                if (enemyAnim != null)
+                    enemyAnim.SetBool("isAttack", true);
+
+                StartShooting();
+            }
+        }
+        else
+        {
+            Patrol();
+        }
+    }
+
+    private void StartShooting()
+    {
+        if (!isShooted)
+        {
+            isShooted = true;
+            RangedAttack();
+        }
+    }
+
+    private void StopShooting()
+    {
+        if (isShooted)
+        {
+            isShooted = true;
+            ShootingGapSec = FixShootingGapSec;
+        }
+    }
+
+    private void ShootTimer()
+    {
+        if (isShooted)
+        {
+            ShootingGapSec -= Time.deltaTime;
+            if(ShootingGapSec < 0)
+            {
+                isShooted = false;
+                ShootingGapSec = FixShootingGapSec;
+            }
+        }
+    }
+
+    private void RangedAttack()
+    {
+        // Instantiate the projectile and set its direction
+        if (projectilePrefab != null && projectileSpawnPoint != null)
+        {
+            GameObject projectile = Instantiate(projectilePrefab, projectileSpawnPoint.position, Quaternion.identity);
+            Rigidbody rb = projectile.GetComponent<Rigidbody>();
+
+            if (rb != null && Player != null)
+            {
+                Vector3 direction = (Player.position - projectileSpawnPoint.position).normalized;
+                //rb.AddForce(direction * 10f, ForceMode.Impulse); // Adjust force as needed
+                rb.velocity = direction * BulletSpeed;
+            }
+        }
     }
 
     private void StartChasingPlayer()
     {
         isChasingPlayer = true;
 
-        enemyAnim.SetBool("isWalking", true);
+        if (enemyAnim != null)
+            enemyAnim.SetBool("isWalking", true);
 
-
-        // Rotate to face the player
-        Vector3 directionToPlayer = (Player.position - transform.position).normalized;
-        Quaternion lookRotation = Quaternion.LookRotation(new Vector3(directionToPlayer.x, 0, directionToPlayer.z));
-        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
+        RotateToFacePlayer();
     }
 
+
+    // Rotate to face the player
+    private void RotateToFacePlayer()
+    {
+        if (Player != null)
+        {
+            Vector3 directionToPlayer = (Player.position - transform.position).normalized;
+            Quaternion lookRotation = Quaternion.LookRotation(new Vector3(directionToPlayer.x, 0, directionToPlayer.z));
+            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
+        }
+    }
 
     private void SetNewRandomDestination()
     {
@@ -146,7 +284,8 @@ public class Enemy : MonoBehaviour
         if (NavMesh.SamplePosition(randomPoint, out NavMeshHit hit, patrolRadius, NavMesh.AllAreas))
         {
             targetPosition = hit.position;
-            enemyAnim.SetBool("isWalking", true);
+            if (enemyAnim != null)
+                enemyAnim.SetBool("isWalking", true);
             agent.SetDestination(targetPosition);
         }
     }
@@ -163,7 +302,8 @@ public class Enemy : MonoBehaviour
                 idleTimer = 0f;
             } else
             {
-                enemyAnim.SetBool("isWalking", false);
+                if (enemyAnim != null)
+                    enemyAnim.SetBool("isWalking", false);
             }
         }
     }
@@ -188,13 +328,13 @@ public class Enemy : MonoBehaviour
     }
 
 
-    private bool PlayerInDetectionRadius()
+
+    private bool PlayerInDetectionRadius(float radius)
     {
-        // Check if the player is within the detection radius
         if (Player != null)
         {
             float distanceToPlayer = Vector3.Distance(transform.position, Player.position);
-            return distanceToPlayer <= detectionRadius;
+            return distanceToPlayer <= radius;
         }
         return false;
     }
