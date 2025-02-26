@@ -50,6 +50,7 @@ public class Enemy : MonoBehaviour
     private float idleTimer;
 
     private Transform Player;
+    private CharacterController PlayerCharacterController;
 
     private bool isChasingPlayer;
 
@@ -64,8 +65,14 @@ public class Enemy : MonoBehaviour
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private Transform projectileSpawnPoint;
     [SerializeField] private float BulletSpeed = 20;
-    [SerializeField] private float ShootingGapSec = 3f;
+    [SerializeField] private float ShootingGapSec = 5f;
     private float FixShootingGapSec;
+
+    [Header("Aiming Line Settings")]
+    [SerializeField] private LineRenderer aimingLine;
+    [SerializeField] private float aimingLineStartShowTime = 3f;
+    [SerializeField] private Color aimingLineColor = Color.red; 
+    [SerializeField] private float lineWidth = 0.02f;
 
     private bool isShooted;
     // Start is called before the first frame update
@@ -76,6 +83,7 @@ public class Enemy : MonoBehaviour
         patrolRadius = EnemyManager.Instance.spawnRadius;
         agent = GetComponent<NavMeshAgent>();
         Player = GameObject.FindGameObjectWithTag("Player").transform;
+        PlayerCharacterController = Player.GetComponent<CharacterController>();
 
         enemyRenderer = GetComponent<Renderer>();
         //enemyMaterial = enemyRenderer.material;
@@ -88,7 +96,17 @@ public class Enemy : MonoBehaviour
 
         maxhealth = health;
 
-        //enemyAnim = GetComponent<Animator>();
+        if (enemyType == EnemyType.Ranged)
+        {
+            if (aimingLine != null)
+            {
+                aimingLine.startColor = aimingLineColor;
+                aimingLine.endColor = aimingLineColor;
+                aimingLine.startWidth = lineWidth;
+                aimingLine.endWidth = lineWidth;
+                aimingLine.enabled = false;
+            }
+        }
     }
 
     void Update()
@@ -228,10 +246,36 @@ public class Enemy : MonoBehaviour
         if (isShooted)
         {
             ShootingGapSec -= Time.deltaTime;
+
+            //Keep update the aiming line
+            if (aimingLine.enabled == true)
+            {
+                aimingLine.SetPosition(0, projectileSpawnPoint.position);
+                aimingLine.SetPosition(1, PlayerCharacterController.bounds.center);
+            }
+
+            if (ShootingGapSec < aimingLineStartShowTime)
+            {
+                if (aimingLine != null)
+                {
+                    aimingLine.enabled = true;
+                    Debug.Log("StartAim");
+                    // Set the line start pos to the shooting point and end with player pos
+                    aimingLine.SetPosition(0, projectileSpawnPoint.position);
+                    aimingLine.SetPosition(1, PlayerCharacterController.bounds.center);
+                }
+            }
+         
             if(ShootingGapSec < 0)
             {
                 isShooted = false;
                 ShootingGapSec = FixShootingGapSec;
+
+                // Disable the aiming line when it shooted
+                if (aimingLine != null)
+                {
+                    aimingLine.enabled = false;
+                }
             }
         }
     }
@@ -250,6 +294,12 @@ public class Enemy : MonoBehaviour
                 //rb.AddForce(direction * 10f, ForceMode.Impulse); // Adjust force as needed
                 rb.velocity = direction * BulletSpeed;
             }
+        }
+
+        // Disable the aiming line when it shooted
+        if (aimingLine != null)
+        {
+            aimingLine.enabled = false;
         }
     }
 
