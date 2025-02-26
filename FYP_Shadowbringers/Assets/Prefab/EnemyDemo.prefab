@@ -1159,7 +1159,11 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   projectileSpawnPoint: {fileID: 0}
   BulletSpeed: 20
-  ShootingGapSec: 3
+  ShootingGapSec: 6
+  aimingLine: {fileID: 0}
+  aimingLineStartShowTime: 3
+  aimingLineColor: {r: 1, g: 0, b: 0, a: 1}
+  lineWidth: 0.02
 --- !u!136 &6400312472254573603
 CapsuleCollider:
   m_ObjectHideFlags: 0
