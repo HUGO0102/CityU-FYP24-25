@@ -5,7 +5,7 @@ using UnityEngine.AI;
 using DG.Tweening;
 using System;
 
-public class Enemy : MonoBehaviour
+public class Boss_Ai : MonoBehaviour
 {
 
     public enum EnemyType
@@ -34,7 +34,8 @@ public class Enemy : MonoBehaviour
 
     [Header("Player Detecter")]
     public float meleeDetectionRadius = 10f;
-    public float rangedDetectionRadius = 15f;
+    public float rangedDetectionRadius = 25f;
+    public GameObject TargetLooker;
 
     [Header("Render")]
     public Renderer enemyRenderer; //Enemy's Renderer component
@@ -50,6 +51,7 @@ public class Enemy : MonoBehaviour
     private float idleTimer;
 
     private Transform Player;
+    private Transform Player_HintPoint;
     private CharacterController PlayerCharacterController;
 
     private bool isChasingPlayer;
@@ -71,7 +73,7 @@ public class Enemy : MonoBehaviour
     [Header("Aiming Line Settings")]
     [SerializeField] private LineRenderer aimingLine;
     [SerializeField] private float aimingLineStartShowTime = 3f;
-    [SerializeField] private Color aimingLineColor = Color.red; 
+    [SerializeField] private Color aimingLineColor = Color.red;
     [SerializeField] private float lineWidth = 0.02f;
 
     private bool isShooted;
@@ -83,6 +85,7 @@ public class Enemy : MonoBehaviour
         patrolRadius = EnemyManager.Instance.spawnRadius;
         agent = GetComponent<NavMeshAgent>();
         Player = GameObject.FindGameObjectWithTag("Player").transform;
+        Player_HintPoint = GameObject.FindGameObjectWithTag("Player_HintPoint").transform;
         PlayerCharacterController = Player.GetComponent<CharacterController>();
 
         enemyRenderer = GetComponent<Renderer>();
@@ -126,7 +129,7 @@ public class Enemy : MonoBehaviour
                 RangedBehavior();
                 ShootTimer();
                 break;
-        }    
+        }
     }
 
     private void MeleeBehavior()
@@ -135,10 +138,12 @@ public class Enemy : MonoBehaviour
         if (PlayerInDetectionRadius(meleeDetectionRadius))
         {
             StartChasingPlayer();
+            TargetLooker.GetComponent<TargetLooker>().targetTrans = Player_HintPoint;
         }
         else
         {
             StopChasingPlayer();
+            TargetLooker.GetComponent<TargetLooker>().targetTrans = null;
         }
 
         // If not chasing the player
@@ -185,10 +190,12 @@ public class Enemy : MonoBehaviour
         if (PlayerInDetectionRadius(rangedDetectionRadius))
         {
             StartChasingPlayer();
+            TargetLooker.GetComponent<TargetLooker>().targetTrans = Player_HintPoint;
         }
         else
         {
             StopChasingPlayer();
+            TargetLooker.GetComponent<TargetLooker>().targetTrans = null;
         }
 
         if (isChasingPlayer)
@@ -265,8 +272,8 @@ public class Enemy : MonoBehaviour
                     aimingLine.SetPosition(1, PlayerCharacterController.bounds.center);
                 }
             }
-         
-            if(ShootingGapSec < 0)
+
+            if (ShootingGapSec < 0)
             {
                 isShooted = false;
                 ShootingGapSec = FixShootingGapSec;
@@ -350,7 +357,8 @@ public class Enemy : MonoBehaviour
             {
                 SetNewRandomDestination();
                 idleTimer = 0f;
-            } else
+            }
+            else
             {
                 if (enemyAnim != null)
                     enemyAnim.SetBool("isWalking", false);
