@@ -90,12 +90,12 @@ public class BeatCenter : MonoBehaviour
     {
         HitedObj.GetComponent<BoxCollider2D>().enabled = false;
         Image HitedImg = HitedObj.GetComponent<Image>();
-        HitedImg.color = Color.red;
+        //HitedImg.color = Color.red;
     }
 
     public void AnimateImage()
     {
-        CenterBar.color = Color.red;
+        //CenterBar.color = Color.red;
 
         // Scale up the image in 0.2 seconds, then scale back down smoothly
         CenterBar.transform.DOScale(originalCenterScale * scaleMultiplier, animationDuration)
