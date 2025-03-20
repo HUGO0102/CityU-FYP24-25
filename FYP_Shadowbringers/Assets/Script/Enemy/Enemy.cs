@@ -320,7 +320,7 @@ public class Enemy : MonoBehaviour
         if (Player != null)
         {
             Vector3 directionToPlayer = (Player.position - transform.position).normalized;
-            Quaternion lookRotation = Quaternion.LookRotation(new Vector3(directionToPlayer.x, 90, directionToPlayer.z));
+            Quaternion lookRotation = Quaternion.LookRotation(new Vector3(directionToPlayer.x, 0, directionToPlayer.z));
             transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
         }
     }
