@@ -8,11 +8,19 @@ using UnityEngine.EventSystems;
 public class MenuManager : MonoBehaviour
 {
     [Header("Menu Manager")]
+    [SerializeField] Animator transitionAnim;
     public string MainGame;
     
-    public void LoadScene()
+    public void NextLevel()
     {
+        StartCoroutine(LoadScene());
+    }
+    IEnumerator LoadScene()
+    {
+        transitionAnim.SetTrigger("End");
+        yield return new WaitForSeconds(1);
         SceneManager.LoadScene(MainGame);
+        transitionAnim.SetTrigger("Start");
     }
 
     public void ExitButton()
