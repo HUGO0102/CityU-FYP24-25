@@ -60,7 +60,7 @@ public class Enemy : MonoBehaviour
 
     [Header("Melee Attack Settings")]
     [SerializeField] private float StopMovingAttacGap = 4f;
-
+    [SerializeField] private float RotationValue = 0f;
     [Header("Range Enemy Setting")]
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private Transform projectileSpawnPoint;
@@ -319,8 +319,16 @@ public class Enemy : MonoBehaviour
     {
         if (Player != null)
         {
+            // Calculate the direction to the player
             Vector3 directionToPlayer = (Player.position - transform.position).normalized;
-            Quaternion lookRotation = Quaternion.LookRotation(new Vector3(directionToPlayer.x, 0, directionToPlayer.z));
+
+            // Adjust the direction to include your custom rotation offset (RotationValue in degrees)
+            float adjustedYRotation = Mathf.Atan2(directionToPlayer.x, directionToPlayer.z) * Mathf.Rad2Deg + RotationValue;
+
+            // Create the target rotation with the adjusted Y angle
+            Quaternion lookRotation = Quaternion.Euler(0, adjustedYRotation, 0);
+
+            // Smoothly rotate towards the target rotation
             transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
         }
     }
