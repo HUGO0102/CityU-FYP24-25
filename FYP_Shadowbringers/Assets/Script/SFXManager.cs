@@ -14,6 +14,9 @@ public class SFX
 public class SFXManager : MonoBehaviour
 {
     public AudioSource sfxSource;       // AudioSource for playing SFX
+    public AudioClip[] OnBeatSFX;        // Clips in SFX list 
+    private AudioClip activeSound;      // Clips will be used for random play
+    [Range(0f, 1f)] public float OnBeatvolume = 1f;
     public List<SFX> sfxList;           // List of SFX objects
 
     private Dictionary<string, SFX> sfxDictionary;  // Dictionary to look up SFX by name
@@ -72,6 +75,13 @@ public class SFXManager : MonoBehaviour
         {
             Debug.LogWarning($"SFX '{sfxName}' not found!");
         }
+    }
+
+    public void playRandomSFX()
+    {
+        activeSound = OnBeatSFX[Random.Range(0, sfxList.Count)];
+        // Play the sound with its specific volume using PlayOneShot with the volume parameter
+        sfxSource.PlayOneShot(activeSound, OnBeatvolume);
     }
 
     // Function to set the volume for a specific SFX (if needed at runtime)

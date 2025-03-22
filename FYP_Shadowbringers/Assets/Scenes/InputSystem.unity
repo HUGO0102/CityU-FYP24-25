@@ -2951,17 +2951,17 @@ PrefabInstance:
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.1261775
+      value: 0.12617752
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.000000017068862
+      value: -0.000000017068862
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.0000000021710582
+      value: 0.0000000021710584
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
@@ -3718,17 +3718,17 @@ PrefabInstance:
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.1261775
+      value: 0.12617752
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.000000017068862
+      value: -0.000000017068862
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.0000000021710582
+      value: 0.0000000021710584
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
@@ -4428,6 +4428,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sfxSource: {fileID: 1567025501}
+  OnBeatSFX:
+  - {fileID: 8300000, guid: b6773618bebca3e40a24d96860197149, type: 3}
+  - {fileID: 8300000, guid: 85fa991ecaf9723479fc2e821c6f9e72, type: 3}
+  - {fileID: 8300000, guid: 6b2ccc55ef6c23744a21d14d7c7ae78e, type: 3}
+  - {fileID: 8300000, guid: 9eee495fda1040e49aa5966f6bcc2ed1, type: 3}
+  - {fileID: 8300000, guid: 25d0862941c646b4dbb99cb0dfbf491d, type: 3}
+  OnBeatvolume: 0.05
   sfxList:
   - name: HitSFX
     clip: {fileID: 8300000, guid: 1a860e8f06df5714d88ad9f84eb30c42, type: 3}

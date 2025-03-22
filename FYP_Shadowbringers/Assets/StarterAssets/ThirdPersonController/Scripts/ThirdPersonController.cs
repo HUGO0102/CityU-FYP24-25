@@ -507,6 +507,7 @@ namespace StarterAssets
                     if (beatCenter.HitInBeat)
                     {
                         Debug.Log($"In Beat!");
+                        SFXManager.Instance.playRandomSFX();
                     }
                 }
             }            
