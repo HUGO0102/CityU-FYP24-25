@@ -2766,7 +2766,7 @@ GameObject:
   - component: {fileID: 7270745586405865945}
   m_Layer: 0
   m_Name: Robots01_V7_LP(Ranged)
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3635,7 +3635,7 @@ MonoBehaviour:
   enemyAnim: {fileID: 5355626891995823093}
   StopMovingAttacGap: 4
   RotationValue: 75
-  projectilePrefab: {fileID: 1584511123928177943, guid: 879e8bdbca23d194481b8f1b76e6cea1,
+  projectilePrefab: {fileID: 5865205559470039968, guid: 85a8fbd6f3bf0814f84918c792771328,
     type: 3}
   projectileSpawnPoint: {fileID: 6498204939693472783}
   BulletSpeed: 20

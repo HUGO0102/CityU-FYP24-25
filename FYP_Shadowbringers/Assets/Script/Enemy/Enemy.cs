@@ -291,6 +291,8 @@ public class Enemy : MonoBehaviour
             if (rb != null && Player != null)
             {
                 Vector3 direction = (Player.position - projectileSpawnPoint.position).normalized;
+                projectile.transform.rotation = Quaternion.LookRotation(direction);
+                projectile.transform.Rotate(90, 0, 0);
                 //rb.AddForce(direction * 10f, ForceMode.Impulse); // Adjust force as needed
                 rb.velocity = direction * BulletSpeed;
             }

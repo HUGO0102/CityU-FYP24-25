@@ -79,7 +79,7 @@ public class SFXManager : MonoBehaviour
 
     public void playRandomSFX()
     {
-        activeSound = OnBeatSFX[Random.Range(0, sfxList.Count)];
+        activeSound = OnBeatSFX[Random.Range(0, OnBeatSFX.Length)];
         // Play the sound with its specific volume using PlayOneShot with the volume parameter
         sfxSource.PlayOneShot(activeSound, OnBeatvolume);
     }

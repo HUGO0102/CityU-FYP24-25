@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class RangeEnemyBullet : MonoBehaviour
-{
+{    
     private void Start()
     {
         Destroy(gameObject, 5f);
-    }
+    }    
 
     //private void OnCollisionEnter(Collision collision)
     //{
