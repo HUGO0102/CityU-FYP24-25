@@ -186,33 +186,33 @@ public class Enemy : MonoBehaviour
         {
             StartChasingPlayer();
         }
-        else
-        {
-            StopChasingPlayer();
-        }
 
         if (isChasingPlayer)
         {
             float distance = Vector3.Distance(Player.transform.position, transform.position);
 
+            RotateToFacePlayer();
+
             if (distance > rangedDetectionRadius - 5)
             {
+                // Chase the player but maintain a distance
+                agent.speed = startSpeed;
+                agent.SetDestination(Player.position);   
+
+                if (enemyAnim != null)
+                    enemyAnim.SetBool("isRunning", true);
+
                 if (!isShooted)
                 {
-                    // Chase the player but maintain a distance
-                    agent.SetDestination(Player.position);
-                    agent.speed = startSpeed;
-
-                    if (enemyAnim != null)
-                        enemyAnim.SetBool("isRunning", true);
-
-                    StopShooting();
-                }                
+                    StartShooting(); // Shoot once when the player moves out of range
+                }
+                //StopShooting();
             }
             else
             {
                 // Stop and attack the player from a distance
                 agent.speed = 0;
+                agent.SetDestination(transform.position);
 
                 if (enemyAnim != null)
                     enemyAnim.SetBool("isRunning", false);
@@ -239,16 +239,13 @@ public class Enemy : MonoBehaviour
     {
         if (isShooted)
         {
-            isShooted = true;
+            isShooted = false;
             ShootingGapSec = FixShootingGapSec;
         }
-        if (aimingLine.enabled == true)
-        {
-            if (enemyAnim != null)
-                enemyAnim.SetBool("isRunning", true);
 
+        if (aimingLine != null && aimingLine.enabled)
+        {
             aimingLine.enabled = false;
-            ShootingGapSec = FixShootingGapSec;
         }
     }
 
@@ -258,31 +255,28 @@ public class Enemy : MonoBehaviour
         {
             ShootingGapSec -= Time.deltaTime;
 
-            //Keep update the aiming line
-            if (aimingLine.enabled == true)
+            // Keep updating the aiming line
+            if (aimingLine != null && aimingLine.enabled)
             {
                 aimingLine.SetPosition(0, projectileSpawnPoint.position);
                 aimingLine.SetPosition(1, PlayerCharacterController.bounds.center);
             }
 
-            if (ShootingGapSec < aimingLineStartShowTime)
+            // Enable the aiming line when the timer reaches the aiming line start time
+            if (ShootingGapSec < aimingLineStartShowTime && aimingLine != null)
             {
-                if (aimingLine != null)
-                {
-                    aimingLine.enabled = true;
-                    Debug.Log("StartAim");
-                    // Set the line start pos to the shooting point and end with player pos
-                    aimingLine.SetPosition(0, projectileSpawnPoint.position);
-                    aimingLine.SetPosition(1, PlayerCharacterController.bounds.center);
-                }
+                aimingLine.enabled = true;
+                aimingLine.SetPosition(0, projectileSpawnPoint.position);
+                aimingLine.SetPosition(1, PlayerCharacterController.bounds.center);
             }
-         
-            if(ShootingGapSec < 0)
-            {
-                isShooted = false;
-                ShootingGapSec = FixShootingGapSec;
 
-                // Disable the aiming line when it shooted
+            // When the shooting timer ends, reset the state
+            if (ShootingGapSec <= 0)
+            {
+                isShooted = false; // Allow the enemy to shoot again
+                ShootingGapSec = FixShootingGapSec; // Reset the cooldown
+
+                // Disable the aiming line after shooting
                 if (aimingLine != null)
                 {
                     aimingLine.enabled = false;
@@ -304,7 +298,6 @@ public class Enemy : MonoBehaviour
                 Vector3 direction = (Player.position - projectileSpawnPoint.position).normalized;
                 projectile.transform.rotation = Quaternion.LookRotation(direction);
                 projectile.transform.Rotate(90, 0, 0);
-                //rb.AddForce(direction * 10f, ForceMode.Impulse); // Adjust force as needed
                 rb.velocity = direction * BulletSpeed;
             }
         }
@@ -315,7 +308,7 @@ public class Enemy : MonoBehaviour
             aimingLine.enabled = false;
         }
 
-        ShootingGapSec = FixShootingGapSec;
+        //ShootingGapSec = FixShootingGapSec;
     }
 
     private void StartChasingPlayer()
