@@ -1136,6 +1136,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: DummyEnemy (11)
       objectReference: {fileID: 0}
+    - target: {fileID: 5159780915920877462, guid: 3c2400abe05efdd4c9f3f25aa441c068,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5159780915920877471, guid: 3c2400abe05efdd4c9f3f25aa441c068,
         type: 3}
       propertyPath: m_RootOrder
@@ -1545,7 +1550,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyPrefab: {fileID: 6400312472261959658, guid: 942d0c773be24c2489f1d5a19a8825b6,
     type: 3}
-  maxEnemies: 7
+  maxEnemies: 1
   spawnRadius: 10
   spawnInterval: 1
   spawnHeight: 1
@@ -1966,6 +1971,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: DummyEnemy (10)
+      objectReference: {fileID: 0}
+    - target: {fileID: 5159780915920877462, guid: 3c2400abe05efdd4c9f3f25aa441c068,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5159780915920877471, guid: 3c2400abe05efdd4c9f3f25aa441c068,
         type: 3}
@@ -2659,6 +2669,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: DummyEnemy (9)
       objectReference: {fileID: 0}
+    - target: {fileID: 5159780915920877462, guid: 3c2400abe05efdd4c9f3f25aa441c068,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5159780915920877471, guid: 3c2400abe05efdd4c9f3f25aa441c068,
         type: 3}
       propertyPath: m_RootOrder
@@ -2865,6 +2880,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Robots01_V7_LP(Ranged) (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 1727409941108308789, guid: ea2be7b0b88129b40b745fabfdb69c19,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2068047905394876815, guid: ea2be7b0b88129b40b745fabfdb69c19,
         type: 3}
@@ -4955,6 +4975,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Robots01_V7_LP(Ranged) (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 1727409941108308789, guid: ea2be7b0b88129b40b745fabfdb69c19,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2068047905394876815, guid: ea2be7b0b88129b40b745fabfdb69c19,
         type: 3}
       propertyPath: m_RootOrder
@@ -5023,6 +5048,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Robots01_V7_LP(Ranged) (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 1727409941108308789, guid: ea2be7b0b88129b40b745fabfdb69c19,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2068047905394876815, guid: ea2be7b0b88129b40b745fabfdb69c19,
         type: 3}
@@ -8101,6 +8131,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: DummyEnemy
+      objectReference: {fileID: 0}
+    - target: {fileID: 5159780915920877462, guid: 3c2400abe05efdd4c9f3f25aa441c068,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5159780915920877471, guid: 3c2400abe05efdd4c9f3f25aa441c068,
         type: 3}

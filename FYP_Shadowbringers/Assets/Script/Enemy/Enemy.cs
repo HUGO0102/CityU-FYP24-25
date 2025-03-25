@@ -197,14 +197,17 @@ public class Enemy : MonoBehaviour
 
             if (distance > rangedDetectionRadius - 5)
             {
-                // Chase the player but maintain a distance
-                agent.SetDestination(Player.position);
-                agent.speed = startSpeed;
+                if (!isShooted)
+                {
+                    // Chase the player but maintain a distance
+                    agent.SetDestination(Player.position);
+                    agent.speed = startSpeed;
 
-                if (enemyAnim != null)
-                    enemyAnim.SetBool("isAttack", false);
+                    if (enemyAnim != null)
+                        enemyAnim.SetBool("isRunning", true);
 
-                StopShooting();
+                    StopShooting();
+                }                
             }
             else
             {
@@ -212,7 +215,7 @@ public class Enemy : MonoBehaviour
                 agent.speed = 0;
 
                 if (enemyAnim != null)
-                    enemyAnim.SetBool("isAttack", true);
+                    enemyAnim.SetBool("isRunning", false);
 
                 StartShooting();
             }
@@ -237,6 +240,14 @@ public class Enemy : MonoBehaviour
         if (isShooted)
         {
             isShooted = true;
+            ShootingGapSec = FixShootingGapSec;
+        }
+        if (aimingLine.enabled == true)
+        {
+            if (enemyAnim != null)
+                enemyAnim.SetBool("isRunning", true);
+
+            aimingLine.enabled = false;
             ShootingGapSec = FixShootingGapSec;
         }
     }
@@ -303,6 +314,8 @@ public class Enemy : MonoBehaviour
         {
             aimingLine.enabled = false;
         }
+
+        ShootingGapSec = FixShootingGapSec;
     }
 
     private void StartChasingPlayer()
