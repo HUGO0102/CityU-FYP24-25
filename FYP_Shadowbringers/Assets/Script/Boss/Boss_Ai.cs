@@ -1,418 +1,343 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.AI;
-using DG.Tweening;
-using System;
-
+using static UnityEngine.GraphicsBuffer;
 public class Boss_Ai : MonoBehaviour
 {
-
-    public enum EnemyType
-    {
-        Melee,
-        Ranged
-    }
-
-    [Header("Enemy Type")]
-    public EnemyType enemyType = EnemyType.Melee; // Default to Melee
-
-    [Header("Manger")]
     public NavMeshAgent agent;
 
-    [Header("State")]
-    public float health = 5;
-    private float maxhealth;
-
-    private float startSpeed;
-    private float speed;
-
-
-    [Header("WalkAroundSetting")]
-    private Transform patrolCenter; // Center point of the WalkAround area
-    private float patrolRadius; // Radius of the WalkAround area
-
-    [Header("Player Detecter")]
-    public float meleeDetectionRadius = 10f;
-    public float rangedDetectionRadius = 25f;
+    public Transform player;
     public GameObject TargetLooker;
+    private MeshRenderer meshRenderer;
+    public Animator animator;
 
-    [Header("Render")]
-    public Renderer enemyRenderer; //Enemy's Renderer component
-    public Color hitColor = Color.red; // The color to change to when hit
-    public float colorChangeDuration = 0.1f; // Duration of the color change
 
-    private Material enemyMaterial; // Material of the enemy
-    private Color originalColor; // Original color of the enemy
+    //Animation bool
+    bool isIdle;
+    bool isChase;
+    bool isAttack;
+    bool isHit;
+    bool dead;
+    bool isEquiping;
+    bool Equiped;
+    bool isUnEquiping;
 
-    private Vector3 targetPosition;
+    public GameObject DestoryObj;
 
-    private float idleTime = 2f; // Time to wait before moving again
-    private float idleTimer;
+    //Stats
+    public int health;
 
-    private Transform Player;
-    private Transform Player_HintPoint;
-    private CharacterController PlayerCharacterController;
+    //Check for Ground/Obstacles
+    public LayerMask whatIsGround, whatIsPlayer;
 
-    private bool isChasingPlayer;
+    //Patroling
+    public Vector3 walkPoint;
+    public bool walkPointSet;
+    public float walkPointRange;
 
-    public Animator enemyAnim;
+    //Attack Player
+    public float timeBetweenAttacks;
+    bool alreadyAttacked;
+    bool hited;
 
-    public event Action OnDeath;
+    //States
+    public bool isDead;
+    public float sightRange, attackRange;
+    public bool playerInSightRange, playerInAttackRange;
 
-    [Header("Melee Attack Settings")]
-    [SerializeField] private float StopMovingAttacGap = 4f;
+    //Special
+    public Material green, red, yellow;
+    public GameObject projectile;
 
-    [Header("Range Enemy Setting")]
-    [SerializeField] private GameObject projectilePrefab;
-    [SerializeField] private Transform projectileSpawnPoint;
-    [SerializeField] private float BulletSpeed = 20;
-    [SerializeField] private float ShootingGapSec = 5f;
-    private float FixShootingGapSec;
+    private TargetLooker targetLooker;
+    private Vector3 targetPostition;
 
-    [Header("Aiming Line Settings")]
-    [SerializeField] private LineRenderer aimingLine;
-    [SerializeField] private float aimingLineStartShowTime = 3f;
-    [SerializeField] private Color aimingLineColor = Color.red;
-    [SerializeField] private float lineWidth = 0.02f;
+    //VFX
+    [Header("VFX")]
+    public ParticleSystem spark;
+    public ParticleSystem onHitVFX;
+    bool vfxIsCreated = false;
 
-    private bool isShooted;
-    // Start is called before the first frame update
-    void Start()
+    private ParticleSystem onHitVFXInstance;
+
+
+    [Header("Prefab Refrences")]
+    public GameObject bulletPrefab;
+    public GameObject muzzleFlashPrefab;
+
+    [Header("Location Refrences")]
+    [SerializeField] private Transform barrelLocation;
+
+    [Header("Settings")]
+    [Tooltip("Specify time to destory the casing object")][SerializeField] private float destroyTimer = 2f;
+    [Tooltip("Bullet Speed")][SerializeField] private float shotPower = 500f;
+
+    //SFX
+    [Header("SoundFX")]
+    public AudioSource gunAudioSource;
+    public AudioSource enemyAudioSource;
+    public AudioClip fireSound;
+    public AudioClip[] enemyAudioClip;
+    [Range(0.1f, 0.5f)]
+    public float volumeChangeMultiplier = 0.2f;
+    [Range(0.1f, 0.5f)]
+    public float pitchChangeMultiplier = 0.2f;
+
+
+    private void Awake()
     {
-        patrolCenter = EnemyManager.Instance.SpawnCenter;
-
-        patrolRadius = EnemyManager.Instance.spawnRadius;
+        player = GameObject.Find("Player").transform;
         agent = GetComponent<NavMeshAgent>();
-        Player = GameObject.FindGameObjectWithTag("Player").transform;
-        Player_HintPoint = GameObject.FindGameObjectWithTag("Player_HintPoint").transform;
-        PlayerCharacterController = Player.GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();
 
-        enemyRenderer = GetComponent<Renderer>();
-        //enemyMaterial = enemyRenderer.material;
-        //originalColor = enemyMaterial.color;
+        if (meshRenderer == null)
+            meshRenderer = GetComponentInChildren<MeshRenderer>();
 
-        startSpeed = agent.speed;
-        speed = startSpeed;
+        if (targetLooker == null)
+            targetLooker = GetComponentInChildren<TargetLooker>();
 
-        FixShootingGapSec = ShootingGapSec;
 
-        maxhealth = health;
+    }
+    private void Update()
+    {
+        SwitchAnimation();
 
-        if (enemyType == EnemyType.Ranged)
+        if (!isDead)
         {
-            if (aimingLine != null)
+            //Check if Player in sightrange
+            playerInSightRange = Physics.CheckSphere(transform.position, sightRange, whatIsPlayer);
+
+            //Check if Player in attackrange
+            playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, whatIsPlayer);
+
+            targetPostition = new Vector3(player.position.x, this.transform.position.y, player.position.z);
+
+            if (!playerInSightRange && !playerInAttackRange && !alreadyAttacked)
             {
-                aimingLine.startColor = aimingLineColor;
-                aimingLine.endColor = aimingLineColor;
-                aimingLine.startWidth = lineWidth;
-                aimingLine.endWidth = lineWidth;
-                aimingLine.enabled = false;
+                isIdle = false;
+                isAttack = false;
+                isChase = true;
+                Patroling();
+            }
+            if (playerInSightRange && !playerInAttackRange && !alreadyAttacked)
+            {
+
+                isIdle = false;
+                isAttack = false;
+                isChase = true;
+                ChasePlayer();
+            }
+            if (playerInAttackRange && playerInSightRange)
+            {
+                isChase = false;
+                isIdle = false;
+                isAttack = true;
+                AttackPlayer();
             }
         }
     }
 
-    void Update()
+    void SwitchAnimation()
     {
+        animator.SetBool("Patrol", isIdle);
+        animator.SetBool("Chase", isChase);
+        animator.SetBool("Attack", isAttack);
+        animator.SetBool("Hit", isHit);
+    }
+
+    private void Patroling()
+    {
+        if (isDead) return;
+
+        agent.speed = 2f;
+
+        if (targetLooker != null)
+            TargetLooker.GetComponent<TargetLooker>().targetTrans = null;
+
+        if (!walkPointSet) SearchWalkPoint();
+
+        //Calculate direction and walk to Point
+        if (walkPointSet)
+        {
+            agent.SetDestination(walkPoint);
+
+            //Vector3 direction = walkPoint - transform.position;
+            //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 0.15f);
+        }
+
+        //Calculates DistanceToWalkPoint
+        Vector3 distanceToWalkPoint = transform.position - walkPoint;
+
+        //Walkpoint reached
+        if (distanceToWalkPoint.magnitude < 1f)
+            walkPointSet = false;
+
+        if (meshRenderer != null)
+        {
+            meshRenderer.material = green;
+        }
+
+    }
+    private void SearchWalkPoint()
+    {
+        if (targetLooker != null)
+            TargetLooker.GetComponent<TargetLooker>().targetTrans = null;
+
+        float randomZ = Random.Range(-walkPointRange, walkPointRange);
+        float randomX = Random.Range(-walkPointRange, walkPointRange);
+
+        walkPoint = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
+
+        if (Physics.Raycast(walkPoint, -transform.up, 2, whatIsGround))
+            walkPointSet = true;
+    }
+    private void ChasePlayer()
+    {
+        if (isDead) return;
+
+        agent.speed = 5f;
+
+        if (targetLooker != null)
+            TargetLooker.GetComponent<TargetLooker>().targetTrans = player;
+
+        agent.SetDestination(player.position);
+
+        if (meshRenderer != null)
+        {
+            meshRenderer.material = yellow;
+        }
+
+    }
+    private void AttackPlayer()
+    {
+        if (isDead) return;
+
+        agent.speed = 2f;
+
+        if (targetLooker != null)
+            TargetLooker.GetComponent<TargetLooker>().targetTrans = player;
+
+        //Make sure enemy doesn't move
+        agent.SetDestination(transform.position);
+
+        transform.LookAt(targetPostition);
+
+        if (!alreadyAttacked)
+        {
+            if (animator != null)
+                alreadyAttacked = true;
+        }
+
+
+        if (meshRenderer != null)
+        {
+            meshRenderer.material = red;
+        }
+
+    }
+    private void ResetAttack()
+    {
+        if (isDead) return;
+        alreadyAttacked = false;
+    }
+
+    public void SetHitedtoFalse()
+    {
+        hited = false;
+        alreadyAttacked = false;
+    }
+
+    public void TakeDamage(int damage)
+    {
+        hited = true;
+
+        //SFX
+        AudioClip ramdomSFX = enemyAudioClip[Random.Range(0, 3)];
+        enemyAudioSource.volume = Random.Range(1 - volumeChangeMultiplier, 1);
+        enemyAudioSource.pitch = Random.Range(1 - pitchChangeMultiplier, 1 + pitchChangeMultiplier);
+        enemyAudioSource.PlayOneShot(ramdomSFX);
+
+
+        if (animator != null)
+        {
+            //VFX
+            if (!vfxIsCreated)
+            {
+                SpawnOnHitVFX();
+            }
+
+            animator.SetTrigger("isHited");
+        }
+
+
+        health -= damage;
+        Debug.Log("Enemy Health" + health);
         if (health <= 0)
         {
-            Dead();
-        }
+            isDead = true;
+            //Invoke("Destroy", 2.8f);
 
-        switch (enemyType)
-        {
-            case EnemyType.Melee:
-                MeleeBehavior();
-                break;
-
-            case EnemyType.Ranged:
-                RangedBehavior();
-                ShootTimer();
-                break;
-        }
-    }
-
-    private void MeleeBehavior()
-    {
-        // Check if the player is walked in the mele detection radius
-        if (PlayerInDetectionRadius(meleeDetectionRadius))
-        {
-            StartChasingPlayer();
-            TargetLooker.GetComponent<TargetLooker>().targetTrans = Player_HintPoint;
-        }
-        else
-        {
-            StopChasingPlayer();
-            TargetLooker.GetComponent<TargetLooker>().targetTrans = null;
-        }
-
-        // If not chasing the player
-        if (!isChasingPlayer)
-        {
-            Patrol();
-        }
-        else
-        {
-            float distance = Vector3.Distance(Player.transform.position, transform.position);
-
-            NavMeshAgent temp = agent;
-
-            if (temp != null)
+            if (animator != null)
             {
-                if (distance >= agent.stoppingDistance)
-                {
-                    if (enemyAnim != null)
-                        enemyAnim.SetBool("isAttack", false);
-                    agent.SetDestination(Player.position);
-                }
-                else
-                {
-                    //Enemy is Close to Player
-                    //Can Do Enemy Attack Here
-                    if (enemyAnim != null)
-                        enemyAnim.SetBool("isAttack", true);
-                    agent.speed = 0;
-                    StartCoroutine(AttactedThanStartWalk());
-                }
-            }
-        }
-    }
-
-    private IEnumerator AttactedThanStartWalk()
-    {
-        yield return new WaitForSeconds(StopMovingAttacGap);
-        agent.speed = startSpeed;
-    }
-
-    private void RangedBehavior()
-    {
-        // Check if the player is within ranged detection radius
-        if (PlayerInDetectionRadius(rangedDetectionRadius))
-        {
-            StartChasingPlayer();
-            TargetLooker.GetComponent<TargetLooker>().targetTrans = Player_HintPoint;
-        }
-        else
-        {
-            StopChasingPlayer();
-            TargetLooker.GetComponent<TargetLooker>().targetTrans = null;
-        }
-
-        if (isChasingPlayer)
-        {
-            float distance = Vector3.Distance(Player.transform.position, transform.position);
-
-            if (distance > rangedDetectionRadius - 5)
-            {
-                // Chase the player but maintain a distance
-                agent.SetDestination(Player.position);
-                agent.speed = startSpeed;
-
-                if (enemyAnim != null)
-                    enemyAnim.SetBool("isAttack", false);
-
-                StopShooting();
-            }
-            else
-            {
-                // Stop and attack the player from a distance
-                agent.speed = 0;
-
-                if (enemyAnim != null)
-                    enemyAnim.SetBool("isAttack", true);
-
-                StartShooting();
-            }
-        }
-        else
-        {
-            Patrol();
-        }
-    }
-
-    private void StartShooting()
-    {
-        if (!isShooted)
-        {
-            isShooted = true;
-            RangedAttack();
-        }
-    }
-
-    private void StopShooting()
-    {
-        if (isShooted)
-        {
-            isShooted = true;
-            ShootingGapSec = FixShootingGapSec;
-        }
-    }
-
-    private void ShootTimer()
-    {
-        if (isShooted)
-        {
-            ShootingGapSec -= Time.deltaTime;
-
-            //Keep update the aiming line
-            if (aimingLine.enabled == true)
-            {
-                aimingLine.SetPosition(0, projectileSpawnPoint.position);
-                aimingLine.SetPosition(1, PlayerCharacterController.bounds.center);
+                DestroyAnimation();
             }
 
-            if (ShootingGapSec < aimingLineStartShowTime)
-            {
-                if (aimingLine != null)
-                {
-                    aimingLine.enabled = true;
-                    Debug.Log("StartAim");
-                    // Set the line start pos to the shooting point and end with player pos
-                    aimingLine.SetPosition(0, projectileSpawnPoint.position);
-                    aimingLine.SetPosition(1, PlayerCharacterController.bounds.center);
-                }
-            }
-
-            if (ShootingGapSec < 0)
-            {
-                isShooted = false;
-                ShootingGapSec = FixShootingGapSec;
-
-                // Disable the aiming line when it shooted
-                if (aimingLine != null)
-                {
-                    aimingLine.enabled = false;
-                }
-            }
         }
     }
-
-    private void RangedAttack()
+    private void DestroyAnimation()
     {
-        // Instantiate the projectile and set its direction
-        if (projectilePrefab != null && projectileSpawnPoint != null)
+        gameObject.GetComponent<NavMeshAgent>().enabled = false;
+        animator.Play("Dead");
+
+        enemyAudioSource.PlayOneShot(enemyAudioClip[4]);
+
+        //VFX
+        if (!vfxIsCreated)
         {
-            GameObject projectile = Instantiate(projectilePrefab, projectileSpawnPoint.position, Quaternion.identity);
-            Rigidbody rb = projectile.GetComponent<Rigidbody>();
-
-            if (rb != null && Player != null)
-            {
-                Vector3 direction = (Player.position - projectileSpawnPoint.position).normalized;
-                //rb.AddForce(direction * 10f, ForceMode.Impulse); // Adjust force as needed
-                rb.velocity = direction * BulletSpeed;
-            }
+            Instantiate(spark, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), transform.rotation);
+            vfxIsCreated = true;
         }
 
-        // Disable the aiming line when it shooted
-        if (aimingLine != null)
+
+
+        //Delay 10sec
+        Invoke("DestoryObject", 10);
+    }
+
+    public void DestoryObject()
+    {
+        Destroy(DestoryObj);
+    }
+
+    private void SpawnOnHitVFX()
+    {
+        onHitVFXInstance = Instantiate(onHitVFX, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), transform.rotation);
+    }
+
+    public void Shoot()
+    {
+        gunAudioSource.PlayOneShot(fireSound);
+
+        if (muzzleFlashPrefab)
         {
-            aimingLine.enabled = false;
+            //Create the muzzle flash
+            GameObject tempFlash;
+            tempFlash = Instantiate(muzzleFlashPrefab, barrelLocation.position, barrelLocation.rotation);
+
+            //Destroy the muzzle flash effect
+            Destroy(tempFlash, destroyTimer);
         }
-    }
 
-    private void StartChasingPlayer()
-    {
-        isChasingPlayer = true;
+        //cancels if there's no bullet prefeb
+        if (!bulletPrefab)
+        { return; }
 
-        if (enemyAnim != null)
-            enemyAnim.SetBool("isWalking", true);
+        // Create a bullet and add force on it in direction of the barrel
+        Instantiate(bulletPrefab, barrelLocation.position, barrelLocation.rotation).GetComponent<Rigidbody>().AddForce(barrelLocation.forward * shotPower);
 
-        RotateToFacePlayer();
-    }
-
-
-    // Rotate to face the player
-    private void RotateToFacePlayer()
-    {
-        if (Player != null)
-        {
-            Vector3 directionToPlayer = (Player.position - transform.position).normalized;
-            Quaternion lookRotation = Quaternion.LookRotation(new Vector3(directionToPlayer.x, 90, directionToPlayer.z));
-            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
-        }
-    }
-
-    private void SetNewRandomDestination()
-    {
-        // Random point within the patrol radius
-        Vector3 randomPoint = patrolCenter.position + UnityEngine.Random.insideUnitSphere * patrolRadius;
-
-        // Choose a random point and walk to it
-        if (NavMesh.SamplePosition(randomPoint, out NavMeshHit hit, patrolRadius, NavMesh.AllAreas))
-        {
-            targetPosition = hit.position;
-            if (enemyAnim != null)
-                enemyAnim.SetBool("isWalking", true);
-            agent.SetDestination(targetPosition);
-        }
-    }
-
-    private void Patrol()
-    {
-        // If the agent is close to the current target position, set a new destination
-        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
-        {
-            idleTimer += Time.deltaTime;
-            if (idleTimer >= idleTime)
-            {
-                SetNewRandomDestination();
-                idleTimer = 0f;
-            }
-            else
-            {
-                if (enemyAnim != null)
-                    enemyAnim.SetBool("isWalking", false);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Call whem getting hit
-    /// </summary>
-    public void OnHit()
-    {/*
-        // Change the color to red
-        enemyMaterial.DOColor(hitColor, "_BaseColor", colorChangeDuration) 
-            .OnComplete(() =>
-            {
-                enemyMaterial.DOColor(originalColor, "_BaseColor", colorChangeDuration);
-            });*/
-    }
-
-    public void Dead()
-    {
-        OnDeath?.Invoke();
-        Destroy(gameObject);
     }
 
 
 
-    private bool PlayerInDetectionRadius(float radius)
-    {
-        if (Player != null)
-        {
-            float distanceToPlayer = Vector3.Distance(transform.position, Player.position);
-            return distanceToPlayer <= radius;
-        }
-        return false;
-    }
 
-    private void StopChasingPlayer()
-    {
-        isChasingPlayer = false;
-    }
-
-
-    /// <summary>
-    /// For Debug, to see the Random walk around range,  Can Comment All if dont need
-    /// </summary>
-    private void OnDrawGizmosSelected()
-    {
-        // Draw the patrol radius in the Scene view for debugging
-        if (patrolCenter != null)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(patrolCenter.position, patrolRadius);
-        }
-    }
 }

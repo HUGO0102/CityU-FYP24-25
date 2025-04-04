@@ -902,10 +902,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1718889490970259689}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 536db0655f8b54d4f8866ea7bb9ab31d, type: 3}
+  m_Script: {fileID: 11500000, guid: 6430c61b619f1274eaca02529ecf38b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetTrans: {fileID: 0}
+  targetTrans: {fileID: 1718889490914616093}
 --- !u!1 &1718889490975915086
 GameObject:
   m_ObjectHideFlags: 0
@@ -4685,10 +4685,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1718889491389792224}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 536db0655f8b54d4f8866ea7bb9ab31d, type: 3}
+  m_Script: {fileID: 11500000, guid: 6430c61b619f1274eaca02529ecf38b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetTrans: {fileID: 0}
+  targetTrans: {fileID: 1718889491771514804}
 --- !u!1 &1718889491390907152
 GameObject:
   m_ObjectHideFlags: 0
@@ -5236,10 +5236,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1718889491420384473}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 536db0655f8b54d4f8866ea7bb9ab31d, type: 3}
+  m_Script: {fileID: 11500000, guid: 6430c61b619f1274eaca02529ecf38b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetTrans: {fileID: 0}
+  targetTrans: {fileID: 1718889491114209124}
 --- !u!1 &1718889491423912515
 GameObject:
   m_ObjectHideFlags: 0
@@ -6648,10 +6648,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1718889491524841585}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 536db0655f8b54d4f8866ea7bb9ab31d, type: 3}
+  m_Script: {fileID: 11500000, guid: 6430c61b619f1274eaca02529ecf38b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetTrans: {fileID: 0}
+  targetTrans: {fileID: 1718889491370925787}
 --- !u!1 &1718889491530631836
 GameObject:
   m_ObjectHideFlags: 0
@@ -8266,10 +8266,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1718889491816943177}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 536db0655f8b54d4f8866ea7bb9ab31d, type: 3}
+  m_Script: {fileID: 11500000, guid: 6430c61b619f1274eaca02529ecf38b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetTrans: {fileID: 0}
+  targetTrans: {fileID: 1718889492380313830}
 --- !u!1 &1718889491842573531
 GameObject:
   m_ObjectHideFlags: 0
@@ -9369,11 +9369,7 @@ Animator:
   m_ApplyRootMotion: 1
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage: "\nBinding warning: Some generic clip(s) animate transforms that
-    are already bound by a Humanoid avatar. These transforms can only be changed
-    by Humanoid clips.\n\tTransform 'R_Hand'\n\tTransform 'Spine3'\n\tTransform 'Neck'\n\tTransform
-    'Head'\n\tTransform 'R_Fore_Arm'\n\tTransform 'L_Hand'\n\tTransform 'L_Fore_Arm'\n\tTransform
-    'Hips'\n\tTransform 'L_Arm'\n\tTransform 'R_Hand'\n\tand more ..."
+  m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
@@ -12369,10 +12365,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1718889492287442815}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 536db0655f8b54d4f8866ea7bb9ab31d, type: 3}
+  m_Script: {fileID: 11500000, guid: 6430c61b619f1274eaca02529ecf38b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetTrans: {fileID: 0}
+  targetTrans: {fileID: 1718889491998392685}
 --- !u!1 &1718889492314842294
 GameObject:
   m_ObjectHideFlags: 0
@@ -13311,10 +13307,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1718889492479403908}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 536db0655f8b54d4f8866ea7bb9ab31d, type: 3}
+  m_Script: {fileID: 11500000, guid: 6430c61b619f1274eaca02529ecf38b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetTrans: {fileID: 0}
+  targetTrans: {fileID: 1718889491491240533}
 --- !u!1 &1718889492480554446
 GameObject:
   m_ObjectHideFlags: 0
@@ -15776,10 +15772,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1718889492824588981}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 536db0655f8b54d4f8866ea7bb9ab31d, type: 3}
+  m_Script: {fileID: 11500000, guid: 6430c61b619f1274eaca02529ecf38b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetTrans: {fileID: 0}
+  targetTrans: {fileID: 1718889492032213011}
 --- !u!1 &1718889492839499829
 GameObject:
   m_ObjectHideFlags: 0
@@ -15872,7 +15868,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1718889492850902187}
-  - component: {fileID: 1718889492850902186}
+  - component: {fileID: 3089178911422513419}
   m_Layer: 12
   m_Name: Head_Target
   m_TagString: Untagged
@@ -15895,7 +15891,7 @@ Transform:
   m_Father: {fileID: 1718889491857443601}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1718889492850902186
+--- !u!114 &3089178911422513419
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -15904,7 +15900,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1718889492850902185}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 536db0655f8b54d4f8866ea7bb9ab31d, type: 3}
+  m_Script: {fileID: 11500000, guid: 6430c61b619f1274eaca02529ecf38b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   targetTrans: {fileID: 0}

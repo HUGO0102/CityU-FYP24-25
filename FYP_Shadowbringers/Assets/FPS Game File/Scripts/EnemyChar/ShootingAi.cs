@@ -45,9 +45,6 @@ public class ShootingAi : MonoBehaviour
     public float sightRange, attackRange;
     public bool playerInSightRange, playerInAttackRange;
 
-    //Special
-    public Material green, red, yellow;
-    public GameObject projectile;
 
     private TargetLooker targetLooker;
     private Vector3 targetPostition;
@@ -171,10 +168,6 @@ public class ShootingAi : MonoBehaviour
         if (distanceToWalkPoint.magnitude < 1f)
             walkPointSet = false;
 
-        if (meshRenderer != null)
-        {
-            meshRenderer.material = green;
-        }
 
     }
     private void SearchWalkPoint()
@@ -201,11 +194,6 @@ public class ShootingAi : MonoBehaviour
 
         agent.SetDestination(player.position);
 
-        if (meshRenderer != null)
-        {
-            meshRenderer.material = yellow;
-        }
-
     }
     private void AttackPlayer()
     {
@@ -228,10 +216,7 @@ public class ShootingAi : MonoBehaviour
         }
 
 
-        if (meshRenderer != null)
-        {
-            meshRenderer.material = red;
-        }
+
         
     }
     private void ResetAttack()
