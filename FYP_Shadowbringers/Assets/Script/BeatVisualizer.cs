@@ -8,14 +8,17 @@ public class BeatVisualizer : MonoBehaviour
     [SerializeField] private GameObject _beatBarPrefab;
     [SerializeField] private Transform _leftSpawnPoint;
     [SerializeField] private Transform _rightSpawnPoint;
-    [SerializeField] private float _moveSpeed;
-    [SerializeField] private float _barLifetime;
+    private float _moveSpeed;
+    private float bpm;               // Beats Per Minute of the song
+    private float beatDuration;      // Duration of a single beat (seconds)
+    //private float elapsedTime;       // Time elapsed since the bar started moving
+    //[SerializeField] private float _barLifetime;
     [SerializeField] private Canvas canvas;
 
     private bool barSpawned = false;
     private void Start()
     {
-        _beatManager._CheckBeat();
+        _beatManager._CheckBeat();               
     }
 
     private void Update()
@@ -29,12 +32,13 @@ public class BeatVisualizer : MonoBehaviour
         else if (!_beatManager.inBeat)
         {
             barSpawned = false;
-        }
+        }        
     }
 
     private void SpawnBar(Vector3 position, Vector3 direction, bool flip)
     {
         GameObject bar = Instantiate(_beatBarPrefab, position, Quaternion.identity, canvas.transform);
+        BeatBar_fadeout fadeoutCode = bar.GetComponent<BeatBar_fadeout>();
 
         if (flip)
         {
@@ -49,11 +53,12 @@ public class BeatVisualizer : MonoBehaviour
             bar.tag = "RightBeatBar";
         }
 
-        StartCoroutine(MoveAndDestroyBar(bar, direction));
+        //StartCoroutine(MoveAndDestroyBar(bar, direction));
+        fadeoutCode.BarMovement(direction, _moveSpeed);
     }
 
 
-    private IEnumerator MoveAndDestroyBar(GameObject bar, Vector3 direction)
+    /*private IEnumerator MoveAndDestroyBar(GameObject bar, Vector3 direction)
     {
         float elapsedTime = 0f;
         while (elapsedTime < _barLifetime)
@@ -62,7 +67,6 @@ public class BeatVisualizer : MonoBehaviour
             elapsedTime += Time.deltaTime;
             yield return null;
         }
-        Destroy(bar);
-    }
-
+        //Destroy(bar);
+    }*/
 }
