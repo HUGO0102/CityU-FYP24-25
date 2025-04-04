@@ -140,7 +140,7 @@ Material:
     - _TessMax: 25
     - _TessMin: 10
     - _TessValue: 16
-    - _Tile: 0.24
+    - _Tile: 10
     - _TransparentBackfaceEnable: 0
     - _TransparentCullMode: 2
     - _TransparentSortPriority: 0

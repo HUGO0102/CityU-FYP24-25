@@ -52,6 +52,7 @@ public class BeatVisualizer : MonoBehaviour
         StartCoroutine(MoveAndDestroyBar(bar, direction));
     }
 
+
     private IEnumerator MoveAndDestroyBar(GameObject bar, Vector3 direction)
     {
         float elapsedTime = 0f;
@@ -63,4 +64,5 @@ public class BeatVisualizer : MonoBehaviour
         }
         Destroy(bar);
     }
+
 }
