@@ -7,17 +7,14 @@ public class BeatBar_fadeout : MonoBehaviour
     private bool barTouched;
     private Animator barAnim;
     private Vector3 moveDirection;
-    private float moveSpeed;
-    private float _moveSpeed;
-    private float bpm;               // Beats Per Minute of the song
-    private float beatDuration;      // Duration of a single beat (seconds)
+    private float moveSpeed;            
+    private float beatDuration;
 
     private void Start()
     {
         barAnim = gameObject.GetComponent<Animator>();
-        // Set the default BPM (you can adjust this in the inspector or dynamically)
-        bpm = 120f;
-        beatDuration = 60f / bpm;
+
+        beatDuration = 60f / BeatManager.Instance._bpm;
 
         //elapsedTime = 0f;
     }
@@ -41,10 +38,10 @@ public class BeatBar_fadeout : MonoBehaviour
         barTouched = false;
     }
     
-    public void BarMovement(Vector3 direction, float _moveSpeed)
+    public void BarMovement(Vector3 direction, float distanceToCenter)
     {
         moveDirection = direction;
-        moveSpeed = _moveSpeed;
+        moveSpeed = distanceToCenter / beatDuration;
     }
     public void DestroyBar()
     {

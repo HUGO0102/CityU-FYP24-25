@@ -4689,7 +4689,7 @@ MonoBehaviour:
     type: 3}
   _leftSpawnPoint: {fileID: 2125225839}
   _rightSpawnPoint: {fileID: 1064974497}
-  _moveSpeed: 300
+  _centerPoint: {fileID: 1498729637}
   canvas: {fileID: 1503955704}
 --- !u!4 &1630600987
 Transform:
