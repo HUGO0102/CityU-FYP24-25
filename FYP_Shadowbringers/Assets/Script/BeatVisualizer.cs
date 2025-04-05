@@ -8,17 +8,14 @@ public class BeatVisualizer : MonoBehaviour
     [SerializeField] private GameObject _beatBarPrefab;
     [SerializeField] private Transform _leftSpawnPoint;
     [SerializeField] private Transform _rightSpawnPoint;
-    private float _moveSpeed;
-    private float bpm;               // Beats Per Minute of the song
-    private float beatDuration;      // Duration of a single beat (seconds)
-    //private float elapsedTime;       // Time elapsed since the bar started moving
-    //[SerializeField] private float _barLifetime;
+
+    [SerializeField] private Transform _centerPoint; // The center position for beat bars
     [SerializeField] private Canvas canvas;
 
     private bool barSpawned = false;
     private void Start()
     {
-        _beatManager._CheckBeat();               
+        _beatManager._CheckBeat();
     }
 
     private void Update()
@@ -53,20 +50,24 @@ public class BeatVisualizer : MonoBehaviour
             bar.tag = "RightBeatBar";
         }
 
+        float distanceToCenter = Vector3.Distance(position, _centerPoint.position);
+
         //StartCoroutine(MoveAndDestroyBar(bar, direction));
-        fadeoutCode.BarMovement(direction, _moveSpeed);
+        fadeoutCode.BarMovement(direction, distanceToCenter);
     }
 
-
-    /*private IEnumerator MoveAndDestroyBar(GameObject bar, Vector3 direction)
+    /*
+    private IEnumerator MoveAndDestroyBar(GameObject bar, Vector3 direction)
     {
         float elapsedTime = 0f;
         while (elapsedTime < _barLifetime)
         {
+            Debug.Log(_moveSpeed);
             bar.transform.Translate(direction * _moveSpeed * Time.deltaTime);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
-        //Destroy(bar);
-    }*/
+        Destroy(bar);
+    }
+    */
 }
