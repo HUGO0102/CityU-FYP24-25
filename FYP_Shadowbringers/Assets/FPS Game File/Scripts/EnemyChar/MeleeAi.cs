@@ -232,7 +232,11 @@ public class MeleeAi : MonoBehaviour
             //VFX
             if (!vfxIsCreated)
             {
-                Instantiate(onHitVFX, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), transform.rotation);
+                if (onHitVFX != null)
+                {
+                    Instantiate(onHitVFX, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), transform.rotation);
+                }
+                
             }
 
             animator.SetTrigger("isHited");

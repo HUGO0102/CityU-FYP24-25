@@ -9380,6 +9380,14 @@ MonoBehaviour:
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0}
     m_Visible: 1
+  - m_Transform: {fileID: 0}
+    m_Style:
+      shape: {fileID: 4300000, guid: e050c2b16fe384bd994474655a4b4968, type: 2}
+      color: {r: 0, g: 1, b: 0.049598217, a: 0.5}
+      size: 0.2
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+    m_Visible: 1
 --- !u!95 &5605547426343581822
 Animator:
   serializedVersion: 4
@@ -9518,21 +9526,19 @@ MonoBehaviour:
   alreadyAttacked: 0
   fire_Density: 10
   fire_Gap: 0.1
-  bulletPoolSize: 20
   isDead: 0
   hited: 0
   sightRange: 25
-  attackRange: 10
+  attackRange: 15
   playerInSightRange: 0
   playerInAttackRange: 0
   spark: {fileID: 7978147381791673261, guid: fa457b31e6752e84dbb3d0cf53bc50fb, type: 3}
   onHitVFX: {fileID: 3079907916753527066, guid: 5fbf6db1c8732d94ba4253f1cb65303a,
     type: 3}
-  bulletPrefab: {fileID: 3262446121043089012, guid: 29f2f94c0a9aa0547ac28b97833df56b,
-    type: 3}
   muzzleFlashPrefab: {fileID: 1782395880954752, guid: 3dd9cf2e209c504448f1c4c6835675cf,
     type: 3}
-  barrelLocation: {fileID: 703212022}
+  rBarrelLocation: {fileID: 703212022}
+  lBarrelLocation: {fileID: 850370955}
   destroyTimer: 2
   shotPower: 500
   gunAudioSource: {fileID: 6258880847744309256}

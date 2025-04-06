@@ -5020,8 +5020,7 @@ MonoBehaviour:
   playerInSightRange: 0
   playerInAttackRange: 0
   spark: {fileID: 7978147381791673263, guid: fa457b31e6752e84dbb3d0cf53bc50fb, type: 3}
-  onHitVFX: {fileID: 3079907916753527060, guid: 5fbf6db1c8732d94ba4253f1cb65303a,
-    type: 3}
+  onHitVFX: {fileID: 0}
   enemyAudioSource: {fileID: 7034299306292114284}
   enemyAudioClip:
   - {fileID: 8300000, guid: 3d9da40a782de5e4c82a2db85089c08f, type: 3}

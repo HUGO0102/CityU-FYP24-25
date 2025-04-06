@@ -246,7 +246,10 @@ public class ShootingAi : MonoBehaviour
             //VFX
             if (!vfxIsCreated)
             {
-                SpawnOnHitVFX();
+                if (onHitVFX != null)
+                {
+                    Instantiate(onHitVFX, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), transform.rotation);
+                }
             }
 
             animator.SetTrigger("isHited");
@@ -291,10 +294,6 @@ public class ShootingAi : MonoBehaviour
         Destroy(DestoryObj);
     }
 
-    private void SpawnOnHitVFX()
-    {
-        onHitVFXInstance = Instantiate(onHitVFX, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), transform.rotation);
-    }
 
     public void Shoot()
     {

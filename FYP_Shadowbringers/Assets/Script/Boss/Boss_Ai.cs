@@ -44,12 +44,6 @@ public class Boss_Ai : MonoBehaviour
     private int RanNum = 0;
 
 
-    // 子彈對象池
-    private Queue<GameObject> bulletPool = new Queue<GameObject>();
-    [SerializeField] private int bulletPoolSize = 20; // 對象池大小
-
-
-
     [Header("States")] 
     public bool isDead;
     public bool hited;
@@ -66,15 +60,17 @@ public class Boss_Ai : MonoBehaviour
     public ParticleSystem onHitVFX;
     bool vfxIsCreated = false;
 
-    private ParticleSystem onHitVFXInstance;
-
 
     [Header("Prefab Refrences")]
-    public GameObject bulletPrefab;
     public GameObject muzzleFlashPrefab;
 
+    //Barrel
     [Header("Location Refrences")]
-    [SerializeField] private Transform barrelLocation;
+    [SerializeField] private Transform rBarrelLocation;
+    [SerializeField] private Transform lBarrelLocation;
+    [Header("Barrel Spinners")]
+    [SerializeField] private BarrelSpinner rightBarrelSpinner;
+    [SerializeField] private BarrelSpinner leftBarrelSpinner;
 
     [Header("Settings")]
     [Tooltip("Specify time to destory the casing object")][SerializeField] private float destroyTimer = 2f;
@@ -86,6 +82,11 @@ public class Boss_Ai : MonoBehaviour
     public AudioSource enemyAudioSource;
     public AudioClip fireSound;
     public AudioClip[] enemyAudioClip;
+
+    public AudioSource rightBarrelAudioSource;
+    public AudioSource leftBarrelAudioSource;
+    public AudioClip barrelSpinSound;
+
     [Range(0.1f, 0.5f)]
     public float volumeChangeMultiplier = 0.2f;
     [Range(0.1f, 0.5f)]
@@ -107,21 +108,26 @@ public class Boss_Ai : MonoBehaviour
 
     }
 
-    private void Start()
-    {
-        // 初始化對象池
-        for (int i = 0; i < bulletPoolSize; i++)
-        {
-            GameObject bullet = Instantiate(bulletPrefab);
-            bullet.SetActive(false);
-            bulletPool.Enqueue(bullet);
-        }
-    }
+  
 
 
     private void Update()
     {
         SwitchAnimation();
+
+        // 根據血量調整攻擊參數
+        if (health <= (health/2))
+        {
+            fire_Density = 15; // 增加射擊密度
+            fire_Gap = 0.08f; // 減少射擊間隔
+        }
+        else
+        {
+            fire_Density = 10;
+            fire_Gap = 0.1f;
+        }
+
+
 
         if (!isDead)
         {
@@ -219,64 +225,101 @@ public class Boss_Ai : MonoBehaviour
         if (targetLooker != null)
             TargetLooker.GetComponent<TargetLooker>().targetTrans = player;
 
-        // 使槍口也朝向玩家
-        barrelLocation.LookAt(player.position);
+        // 使槍口朝向玩家
+        rBarrelLocation.LookAt(player.position);
+        lBarrelLocation.LookAt(player.position);
 
-        //Make sure enemy doesn't move
+        // 確保敵人不移動
         agent.SetDestination(transform.position);
-
-        
 
         if (!alreadyAttacked)
         {
             while (Attack_SkillsNumber == RanNum)
             {
-                Attack_SkillsNumber = Random.Range(0, 2);
+                Attack_SkillsNumber = Random.Range(0, 3); // 增加到 3 種模式
             }
             RanNum = Attack_SkillsNumber;
 
             switch (Attack_SkillsNumber)
             {
+                case 2:
+                    GunAttackBoth(); // 同時使用左右槍口
+                    print("Both Guns Attack");
+                    break;
                 case 1:
-                    {
-                        GunAttack();
-                        print("Attack Case 1");
-                        break;
-                    }
+                    GunAttackRight(); // 僅使用右槍口
+                    print("Right Gun Attack");
+                    break;
                 case 0:
-                    {
-                        GunAttack();
-                        print("Attack Case 0");
-                        break;
-                    }
+                    GunAttackLeft(); // 僅使用左槍口
+                    print("Left Gun Attack");
+                    break;
                 default:
-                    {
-                        break;
-                    }
-
+                    break;
             }
             alreadyAttacked = true;
         }
     }
 
-
-    private void GunAttack()
+    private void GunAttackRight()
     {
-        isAttack = true; // 觸發攻擊動畫
-        StartCoroutine(FireBurst());
+        isAttack = true;
+        StartCoroutine(FireBurst(rBarrelLocation));
     }
 
-    private IEnumerator FireBurst()
+    private void GunAttackLeft()
+    {
+        isAttack = true;
+        StartCoroutine(FireBurst(lBarrelLocation));
+    }
+
+    private void GunAttackBoth()
+    {
+        isAttack = true;
+        StartCoroutine(FireBurstBoth());
+    }
+
+    private IEnumerator FireBurst(Transform barrel)
     {
         int i = 0;
+        BarrelSpinner selectedSpinner = (barrel == rBarrelLocation) ? rightBarrelSpinner : leftBarrelSpinner;
+        selectedSpinner.StartSpinning(); // 開始旋轉
+
+        AudioSource selectedAudioSource = (barrel == rBarrelLocation) ? rightBarrelAudioSource : leftBarrelAudioSource;
+        selectedAudioSource.clip = barrelSpinSound;
+        selectedAudioSource.loop = true;
+        selectedAudioSource.Play(); // 播放旋轉音效
+
         while (i <= fire_Density)
         {
-            Shoot();
+            Shoot(barrel);
             i++;
             yield return new WaitForSeconds(fire_Gap); // 每發子彈間隔 0.1 秒
         }
+        selectedSpinner.StopSpinning(); // 停止旋轉
+        selectedAudioSource.Stop(); // 停止旋轉音效
         isAttack = false; // 停止攻擊動畫
         Invoke("ResetAttack", timeBetweenAttacks); // 射擊完成後停頓 2 秒
+    }
+
+    private IEnumerator FireBurstBoth()
+    {
+        int i = 0;
+        bool useRightBarrel = true;
+        while (i <= fire_Density)
+        {
+            Transform selectedBarrel = useRightBarrel ? rBarrelLocation : lBarrelLocation;
+            BarrelSpinner selectedSpinner = useRightBarrel ? rightBarrelSpinner : leftBarrelSpinner;
+            selectedSpinner.StartSpinning(); // 開始旋轉
+            Shoot(selectedBarrel);
+            i++;
+            useRightBarrel = !useRightBarrel; // 交替使用左右槍口
+            yield return new WaitForSeconds(fire_Gap);
+        }
+        rightBarrelSpinner.StopSpinning(); // 停止旋轉
+        leftBarrelSpinner.StopSpinning();
+        isAttack = false;
+        Invoke("ResetAttack", timeBetweenAttacks + 2);
     }
 
 
@@ -304,7 +347,10 @@ public class Boss_Ai : MonoBehaviour
             //VFX
             if (!vfxIsCreated)
             {
-                SpawnOnHitVFX();
+                if (onHitVFX != null)
+                {
+                    Instantiate(onHitVFX, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), transform.rotation);
+                }
             }
 
             animator.SetTrigger("isHited");
@@ -347,15 +393,11 @@ public class Boss_Ai : MonoBehaviour
         Destroy(DestoryObj);
     }
 
-    private void SpawnOnHitVFX()
-    {
-        onHitVFXInstance = Instantiate(onHitVFX, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), transform.rotation);
-    }
 
     //=================================================================================================================================================================================
 
 
-    public void Shoot()
+    public void Shoot(Transform barrel)
     {
         gunAudioSource.PlayOneShot(fireSound);
         gunAudioSource.pitch = Random.Range(1 - pitchChangeMultiplier, 1 + pitchChangeMultiplier);
@@ -363,31 +405,25 @@ public class Boss_Ai : MonoBehaviour
         if (muzzleFlashPrefab)
         {
             GameObject tempFlash;
-            tempFlash = Instantiate(muzzleFlashPrefab, barrelLocation.position, barrelLocation.rotation);
+            tempFlash = Instantiate(muzzleFlashPrefab, barrel.position, barrel.rotation);
             Destroy(tempFlash, destroyTimer);
         }
 
         // 從對象池中獲取子彈
         GameObject bullet = BulletPoolManager.Instance.GetEnemyBullet();
         bullet.SetActive(true);
-        bullet.transform.position = barrelLocation.position;
+        bullet.transform.position = barrel.position;
 
         // 計算朝向玩家的方向
-        Vector3 directionToPlayer = (player.position - barrelLocation.position).normalized;
+        Vector3 directionToPlayer = (player.position - barrel.position).normalized;
         bullet.transform.rotation = Quaternion.LookRotation(directionToPlayer);
 
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
         rb.velocity = Vector3.zero;
-        rb.AddForce(barrelLocation.forward * shotPower);
+        rb.AddForce(directionToPlayer * shotPower); // 使用計算出的方向，而不是 barrel.forward
     }
 
-    private IEnumerator ReturnBulletToPool(GameObject bullet, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        bullet.SetActive(false);
-        bulletPool.Enqueue(bullet);
-    }
-
+  
     //=================================================================================================================================================================================
 
     private void OnDrawGizmos()
