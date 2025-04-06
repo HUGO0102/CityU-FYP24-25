@@ -68,12 +68,14 @@ public class SimpleShoot : MonoBehaviour
             Destroy(tempFlash, destroyTimer);
         }
 
-        //cancels if there's no bullet prefeb
-        if (!bulletPrefab)
-        { return; }
+        GameObject bullet = BulletPoolManager.Instance.GetPlayerBullet();
+        bullet.SetActive(true);
+        bullet.transform.position = barrelLocation.position;
+        bullet.transform.rotation = barrelLocation.rotation;
 
-        // Create a bullet and add force on it in direction of the barrel
-        Instantiate(bulletPrefab, barrelLocation.position, barrelLocation.rotation).GetComponent<Rigidbody>().AddForce(barrelLocation.forward * shotPower);
+        Rigidbody rb = bullet.GetComponent<Rigidbody>();
+        rb.velocity = Vector3.zero;
+        rb.AddForce(barrelLocation.forward * shotPower);
 
     }
 

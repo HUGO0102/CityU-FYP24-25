@@ -10,6 +10,10 @@ TagManager:
   - FxTemporaire
   - Enemy
   - Player_HintPoint
+  - Trap
+  - EnemyBullets
+  - PlayerBullets
+  - MeleeEnemy_Attack
   layers:
   - Default
   - TransparentFX
@@ -18,12 +22,12 @@ TagManager:
   - Water
   - UI
   - Ground
+  - Player
+  - Enemy
   - 
   - 
-  - 
-  - 
-  - 
-  - 
+  - PlayerBulletLayer
+  - EnemyBulletLayer
   - 
   - 
   - 

@@ -1,22 +1,52 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class BulletHitBox : MonoBehaviour
 {
-    public GameObject Bullet;
+    [SerializeField] private ParticleSystem hitEffect;
 
-    void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if ((other.gameObject.tag == "Untagged") || (other.gameObject.tag == "Player"))
+        if (gameObject.tag == "PlayerBullets" && other.gameObject.tag == "Enemy")
         {
-            DestroySelf();
+            if (hitEffect != null)
+            {
+                ParticleSystem effect = Instantiate(hitEffect, transform.position, Quaternion.identity);
+                Destroy(effect.gameObject, effect.main.duration);
+            }
+            ReturnToPool();
+        }
+        else if (gameObject.tag == "EnemyBullets" && (other.gameObject.tag == "Player" || other.gameObject.tag == "Untagged"))
+        {
+            if (hitEffect != null)
+            {
+                ParticleSystem effect = Instantiate(hitEffect, transform.position, Quaternion.identity);
+                Destroy(effect.gameObject, effect.main.duration);
+            }
+            ReturnToPool();
         }
     }
 
-    void DestroySelf()
+    private void ReturnToPool()
     {
-        Destroy(Bullet);
-        Debug.Log("Bullet Destroyed");
+        Debug.Log("Bullet Returned to Pool: " + gameObject.tag);
+        if (BulletPoolManager.Instance != null)
+        {
+            if (gameObject.tag == "PlayerBullets")
+            {
+                BulletPoolManager.Instance.ReturnPlayerBullet(gameObject);
+            }
+            else if (gameObject.tag == "EnemyBullets")
+            {
+                BulletPoolManager.Instance.ReturnEnemyBullet(gameObject);
+            }
+            else
+            {
+                gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
     }
 }

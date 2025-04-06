@@ -59,7 +59,6 @@ public class ShootingAi : MonoBehaviour
 
 
     [Header("Prefab Refrences")]
-    public GameObject bulletPrefab;
     public GameObject muzzleFlashPrefab;
 
     [Header("Location Refrences")]
@@ -303,24 +302,20 @@ public class ShootingAi : MonoBehaviour
 
         if (muzzleFlashPrefab)
         {
-            //Create the muzzle flash
             GameObject tempFlash;
             tempFlash = Instantiate(muzzleFlashPrefab, barrelLocation.position, barrelLocation.rotation);
-
-            //Destroy the muzzle flash effect
             Destroy(tempFlash, destroyTimer);
         }
 
-        //cancels if there's no bullet prefeb
-        if (!bulletPrefab)
-        { return; }
+        // 從對象池中獲取子彈
+        GameObject bullet = BulletPoolManager.Instance.GetEnemyBullet();
+        bullet.SetActive(true);
+        bullet.transform.position = barrelLocation.position;
+        bullet.transform.rotation = barrelLocation.rotation;
 
-        // Create a bullet and add force on it in direction of the barrel
-        Instantiate(bulletPrefab, barrelLocation.position, barrelLocation.rotation).GetComponent<Rigidbody>().AddForce(barrelLocation.forward * shotPower);
-
+        Rigidbody rb = bullet.GetComponent<Rigidbody>();
+        rb.velocity = Vector3.zero;
+        rb.AddForce(barrelLocation.forward * shotPower);
     }
-
-
-
 
 }

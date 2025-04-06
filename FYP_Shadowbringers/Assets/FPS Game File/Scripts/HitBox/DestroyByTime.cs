@@ -1,19 +1,34 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class DestroyByTime : MonoBehaviour
 {
-    public float lifetime = 1;
-    // Start is called before the first frame update
-    void Start()
+    public float lifetime = 5f;
+
+    private void OnEnable()
     {
-        Destroy(gameObject, lifetime);
+        Invoke("ReturnToPool", lifetime);
     }
 
-    // Update is called once per frame
-    void Update()
+    private void ReturnToPool()
     {
-        
+        if (BulletPoolManager.Instance != null)
+        {
+            if (gameObject.tag == "PlayerBullets")
+            {
+                BulletPoolManager.Instance.ReturnPlayerBullet(gameObject);
+            }
+            else if (gameObject.tag == "EnemyBullets")
+            {
+                BulletPoolManager.Instance.ReturnEnemyBullet(gameObject);
+            }
+            else
+            {
+                gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
     }
 }
