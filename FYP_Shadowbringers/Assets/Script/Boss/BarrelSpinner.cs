@@ -30,7 +30,7 @@ public class BarrelSpinner : MonoBehaviour
 
     public void StopSpinning()
     {
-        Debug.Log("StopSpinning called at: " + Time.time);
+        //Debug.Log("StopSpinning called at: " + Time.time);
         if (currentState == SpinnerState.Spinning || currentState == SpinnerState.SpinningUp)
         {
             if (spinCoroutine != null)
@@ -48,7 +48,7 @@ public class BarrelSpinner : MonoBehaviour
 
     private IEnumerator SpinUp()
     {
-        Debug.Log("BarrelSpinner: Starting Spin Up");
+        //Debug.Log("BarrelSpinner: Starting Spin Up");
         currentState = SpinnerState.SpinningUp;
 
         // 播放 Spin Up 音效
@@ -57,7 +57,7 @@ public class BarrelSpinner : MonoBehaviour
             audioSource.clip = spinUpSound;
             audioSource.loop = false;
             audioSource.Play();
-            Debug.Log("Playing SpinUpSound. Duration: " + spinUpSound.length);
+            //Debug.Log("Playing SpinUpSound. Duration: " + spinUpSound.length);
         }
 
         float elapsedTime = 0f;
@@ -80,7 +80,7 @@ public class BarrelSpinner : MonoBehaviour
                         audioSource.clip = spinLoopSound;
                         audioSource.loop = true;
                         audioSource.Play();
-                        Debug.Log("SpinUpSound finished. Playing SpinLoopSound.");
+                        //Debug.Log("SpinUpSound finished. Playing SpinLoopSound.");
                         hasPlayedSpinLoop = true;
                     }
                 }
@@ -91,7 +91,7 @@ public class BarrelSpinner : MonoBehaviour
         currentSpinSpeed = maxSpinSpeed;
 
         // 確保進入 Spinning 狀態
-        Debug.Log("BarrelSpinner: Entering Spinning State");
+        //Debug.Log("BarrelSpinner: Entering Spinning State");
         currentState = SpinnerState.Spinning;
 
         // 如果 SpinLoopSound 還未播放（例如 SpinUpSound 比 spinUpTime 長），則在此播放
@@ -100,13 +100,13 @@ public class BarrelSpinner : MonoBehaviour
             audioSource.clip = spinLoopSound;
             audioSource.loop = true;
             audioSource.Play();
-            Debug.Log("Playing SpinLoopSound after SpinUpTime.");
+            //Debug.Log("Playing SpinLoopSound after SpinUpTime.");
         }
     }
 
     private IEnumerator SpinDown()
     {
-        Debug.Log("BarrelSpinner: Starting Spin Down");
+        //Debug.Log("BarrelSpinner: Starting Spin Down");
         currentState = SpinnerState.SpinningDown;
 
         // 停止 SpinLoopSound 並立即播放 WindDownSound
@@ -114,7 +114,7 @@ public class BarrelSpinner : MonoBehaviour
         {
             // 停止當前音效（SpinLoopSound）
             audioSource.Stop();
-            Debug.Log("SpinLoopSound stopped.");
+            //Debug.Log("SpinLoopSound stopped.");
 
             // 立即播放 WindDownSound
             if (windDownSound != null)
@@ -122,8 +122,8 @@ public class BarrelSpinner : MonoBehaviour
                 audioSource.clip = windDownSound;
                 audioSource.loop = false;
                 audioSource.Play();
-                Debug.Log("Playing WindDownSound. Duration: " + windDownSound.length);
-                Debug.Log("AudioSource isPlaying: " + audioSource.isPlaying);
+                //Debug.Log("Playing WindDownSound. Duration: " + windDownSound.length);
+                //Debug.Log("AudioSource isPlaying: " + audioSource.isPlaying);
             }
             else
             {
@@ -151,7 +151,7 @@ public class BarrelSpinner : MonoBehaviour
             yield return new WaitForSeconds(windDownSound.length - elapsedTime);
         }
 
-        Debug.Log("BarrelSpinner: Entering Idle State");
+        //Debug.Log("BarrelSpinner: Entering Idle State");
         currentState = SpinnerState.Idle;
     }
 

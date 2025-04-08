@@ -14,11 +14,29 @@ public class BeatManager : MonoBehaviour
     public float fadeOutBeat;
 
     public static BeatManager Instance;
+    private bool isCheckingBeat = false; // 新增變量，防止重複啟動協程
 
     private void Awake()
     {
         MakeInstance();
+
+        // 確保 AudioSource 不為 null
+        if (_audioSource == null)
+        {
+            _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null)
+            {
+                Debug.LogError("AudioSource component is missing on BeatManager!", this);
+            }
+        }
+
+        // 檢查 Intervals 數組
+        if (_intervals == null || _intervals.Length == 0)
+        {
+            Debug.LogWarning("BeatManager: Intervals array is not set or empty!", this);
+        }
     }
+
     void MakeInstance()
     {
         if (Instance == null)
@@ -34,6 +52,12 @@ public class BeatManager : MonoBehaviour
 
     private void Update()
     {
+        if (_audioSource == null || _audioSource.clip == null || _intervals == null)
+        {
+            Debug.LogWarning("BeatManager: AudioSource, AudioClip, or Intervals array is not set!", this);
+            return;
+        }
+
         foreach (Intervals interval in _intervals)
         {
             float sampledTime = (_audioSource.timeSamples / (_audioSource.clip.frequency * interval.GetIntervalLength(_bpm)));
@@ -43,28 +67,26 @@ public class BeatManager : MonoBehaviour
 
     public void _CheckBeat()
     {
-        StartCoroutine(CheckBeat());
+        if (!isCheckingBeat) // 確保不會重複啟動協程
+        {
+            StartCoroutine(CheckBeat());
+        }
     }
 
     private IEnumerator CheckBeat()
     {
+        isCheckingBeat = true;
         inBeat = true;
-
-        //Debug.Log(inBeat);
-
+        Debug.Log("Beat Start: inBeat = " + inBeat);
         yield return new WaitForSeconds(fadeOutBeat);
-
         inBeat = false;
-
-        //Debug.Log(inBeat);
+        Debug.Log("Beat End: inBeat = " + inBeat);
+        isCheckingBeat = false;
     }
- 
+
     [System.Serializable]
     public class Intervals
     {
-        // 1 step means every beat
-        // 0.5 step mean every 2 beat
-        // 0.25 step mean every 4 beat
         [SerializeField] private float _steps;
         [SerializeField] private UnityEvent _trigger;
         private int _lastInterval;
@@ -75,12 +97,19 @@ public class BeatManager : MonoBehaviour
             return 60f / (bpm * _steps);
         }
 
-        public void CheckForNewInterval (float interval)
+        public void CheckForNewInterval(float interval)
         {
             if (Mathf.FloorToInt(interval) != _lastInterval)
             {
                 _lastInterval = Mathf.FloorToInt(interval);
-                _trigger.Invoke();
+                if (_trigger != null)
+                {
+                    _trigger.Invoke();
+                }
+                else
+                {
+                    Debug.LogWarning("BeatManager: _trigger is null in CheckForNewInterval!");
+                }
             }
         }
     }

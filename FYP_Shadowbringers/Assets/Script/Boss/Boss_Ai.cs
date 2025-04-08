@@ -34,15 +34,9 @@ public class Boss_Ai : MonoBehaviour
     public bool walkPointSet;
     public float walkPointRange;
 
-    [Header("Attack")]
-    // Attack Player
-    public int timeBetweenAttacks = 2;
-    public bool alreadyAttacked;
-    public int fire_Density = 10;
-    private int currentFire_Density = 0;
-    public float fire_Gap = 0.1f;
-    private int Attack_SkillsNumber = 0;
-    private int RanNum = 0;
+    private TargetLooker targetLooker;
+    private Vector3 targetPostition;
+
 
     [Header("States")]
     public bool isDead;
@@ -50,15 +44,25 @@ public class Boss_Ai : MonoBehaviour
     public float sightRange, attackRange;
     public bool playerInSightRange, playerInAttackRange;
 
-    private TargetLooker targetLooker;
-    private Vector3 targetPostition;
+    [Header("MiniGun Attack")]
+    // Attack Player
+    public int timeBetweenAttacks = 2;
+    public bool alreadyAttacked;
+    public int minigun_Fire_Density = 10;
+    private int currentFire_Density = 0;
+    public float minigun_Fire_Gap = 0.1f;
+    private int Attack_SkillsNumber = 0;
+    private int RanNum = 0;
+
 
     // VFX
-    [Header("VFX")]
-    public ParticleSystem spark;
-    public ParticleSystem onHitVFX;
+    [Header("OnHit VFX")]
+    [SerializeField] public ParticleSystem spark;
+    [SerializeField] public ParticleSystem onHitVFX;
+
+    [Header("MiniGun VFX")]
     bool vfxIsCreated = false;
-    public GameObject shootingVFXPrefab; // 新的 VFX 預製體，包含 Muzzle Flash（Visual Effect）
+    [SerializeField] public GameObject shootingVFXPrefab; // 新的 VFX 預製體，包含 Muzzle Flash（Visual Effect）
     private GameObject rightVFXInstance; // 右邊槍口的 VFX 實例
     private GameObject leftVFXInstance;  // 左邊槍口的 VFX 實例
     private Queue<GameObject> vfxPool = new Queue<GameObject>(); // VFX 對象池
@@ -84,15 +88,20 @@ public class Boss_Ai : MonoBehaviour
     [Tooltip("Point Light Intensity")][SerializeField] private float maxLightIntensity = 2f;
     [Tooltip("Point Light Fade Duration")][SerializeField] private float lightFadeDuration = 0.5f;
 
+
+    [Header("Missile Attack")]
+    [SerializeField] private GameObject impactCirclePrefab; // 著彈點預製體
+    [SerializeField] private int missileCount = 3; // 一次攻擊生成多少個著彈點
+    [SerializeField] private float missileLaunchDelay = 0.5f; // 每個著彈點之間的延遲
+
+
     // SFX
     [Header("SoundFX")]
     public AudioSource enemyAudioSource;
     public AudioClip fireSound; // MinigunFireLoop
     public AudioClip[] enemyAudioClip;
-    [Range(0.1f, 0.5f)]
-    public float volumeChangeMultiplier = 0.2f;
-    [Range(0.1f, 0.5f)]
-    public float pitchChangeMultiplier = 0.2f;
+    private float volumeChangeMultiplier = 0.2f;
+    private float pitchChangeMultiplier = 0.2f;
 
     private void Awake()
     {
@@ -126,14 +135,14 @@ public class Boss_Ai : MonoBehaviour
         if (health <= (health / 2))
         {
             lowHealth = true;
-            currentFire_Density = fire_Density * 2; // 增加射擊密度
-            fire_Gap = 0.08f; // 減少射擊間隔
+            currentFire_Density = minigun_Fire_Density * 2; // 增加射擊密度
+            minigun_Fire_Gap = 0.08f; // 減少射擊間隔
         }
         else
         {
             lowHealth = false;
-            currentFire_Density = fire_Density;
-            fire_Gap = 0.1f;
+            currentFire_Density = minigun_Fire_Density;
+            minigun_Fire_Gap = 0.1f;
         }
 
         if (!isDead)
@@ -240,12 +249,16 @@ public class Boss_Ai : MonoBehaviour
         {
             while (Attack_SkillsNumber == RanNum)
             {
-                Attack_SkillsNumber = Random.Range(0, 3); // 增加到 3 種模式
+                Attack_SkillsNumber = Random.Range(0, 4); // 增加到 3 種模式
             }
             RanNum = Attack_SkillsNumber;
 
             switch (Attack_SkillsNumber)
             {
+                case 3:
+                    MissileAttack(); // 導彈攻擊技能
+                    print("Missile Attack");
+                    break;
                 case 2:
                     GunAttackBoth(); // 同時使用左右槍口
                     print("Both Guns Attack");
@@ -345,7 +358,7 @@ public class Boss_Ai : MonoBehaviour
                 }
             }
             i++;
-            yield return new WaitForSeconds(fire_Gap);
+            yield return new WaitForSeconds(minigun_Fire_Gap);
         }
 
 
@@ -354,7 +367,7 @@ public class Boss_Ai : MonoBehaviour
         {
             selectedAudioSource.Stop();
             selectedAudioSource.volume = 1f;
-            Debug.Log("FireBurst: Stopped AudioSource for barrel: " + (isRightBarrel ? "Right" : "Left"));
+            //Debug.Log("FireBurst: Stopped AudioSource for barrel: " + (isRightBarrel ? "Right" : "Left"));
         }
 
         // 停止旋轉並播放 Wind Down Sound
@@ -522,7 +535,7 @@ public class Boss_Ai : MonoBehaviour
             }
             i++;
             useRightBarrel = !useRightBarrel; // 交替使用左右槍口
-            yield return new WaitForSeconds(fire_Gap);
+            yield return new WaitForSeconds(minigun_Fire_Gap);
         }
 
 
@@ -576,9 +589,67 @@ public class Boss_Ai : MonoBehaviour
 
     //=================================================================================================================================================================================
 
+    private void MissileAttack()
+    {
+        isAttack = true;
+        StartCoroutine(LaunchMissiles());
+    }
+
+    private IEnumerator LaunchMissiles()
+    {
+        isAttack = true;
+
+        for (int i = 0; i < missileCount; i++)
+        {
+            Vector3 targetPosition = player.position;
+
+            CapsuleCollider playerCollider = player.GetComponent<CapsuleCollider>();
+            if (playerCollider != null)
+            {
+                float playerHeight = playerCollider.height;
+                Vector3 feetPosition = targetPosition - new Vector3(0f, playerHeight / 2f, 0f);
+
+                RaycastHit hit;
+                if (Physics.Raycast(feetPosition + Vector3.up * 0.5f, Vector3.down, out hit, 1f, whatIsGround))
+                {
+                    targetPosition = hit.point;
+                }
+            }
+            else
+            {
+                targetPosition -= new Vector3(0f, 1f, 0f);
+                RaycastHit hit;
+                if (Physics.Raycast(targetPosition + Vector3.up * 1f, Vector3.down, out hit, 2f, whatIsGround))
+                {
+                    targetPosition = hit.point;
+                }
+            }
+
+            // 生成著彈點
+            GameObject impactCircle = Instantiate(impactCirclePrefab, targetPosition, Quaternion.identity);
+            ImpactCircle circleScript = impactCircle.GetComponent<ImpactCircle>();
+            if (circleScript != null)
+            {
+                // 根據 Boss 血量動態調整拍子數量
+                int beatsToExpand = health > (health / 2) ? 8 : 4; // 血量高於 50% 時 8 拍，低於 50% 時 4 拍
+                circleScript.SetBeatsToExpand(beatsToExpand); // 動態設置拍子數量
+                circleScript.SetPosition(targetPosition);
+                circleScript.StartExpanding();
+            }
+
+            yield return new WaitForSeconds(missileLaunchDelay);
+        }
+
+        isAttack = false;
+        Invoke("ResetAttack", timeBetweenAttacks + 5);
+    }
+
+
+    //=================================================================================================================================================================================
+
     private GameObject GetVFXFromPool(Transform barrel, bool isRightBarrel)
     {
-        Debug.Log("Getting VFX from pool. Pool count: " + vfxPool.Count);
+        //Debug.Log("Getting VFX from pool. Pool count: " + vfxPool.Count);
 
         GameObject vfx;
         if (vfxPool.Count > 0)
@@ -616,7 +687,7 @@ public class Boss_Ai : MonoBehaviour
             // 設置播放參數（例如 Spawn Rate 或 Delay）
             if (visualEffect.HasFloat("fire_delay"))
             {
-                visualEffect.SetFloat("fire_delay", fire_Gap);
+                visualEffect.SetFloat("fire_delay", minigun_Fire_Gap);
                 //Debug.Log("Set fire_delay to: " + fire_Gap);
             }
             else
@@ -627,7 +698,7 @@ public class Boss_Ai : MonoBehaviour
             // 設置粒子生成頻率（如果 VFX Graph 有此參數）
             if (visualEffect.HasFloat("spawnRate"))
             {
-                visualEffect.SetFloat("spawnRate", 1f / fire_Gap);
+                visualEffect.SetFloat("spawnRate", 1f / minigun_Fire_Gap);
                 //Debug.Log("Set spawnRate to: " + (1f / fire_Gap));
             }
 
@@ -645,14 +716,14 @@ public class Boss_Ai : MonoBehaviour
 
     private void ReturnVFXToPool(GameObject vfx)
     {
-        Debug.Log("Returning VFX to pool.");
+        //Debug.Log("Returning VFX to pool.");
 
         // 停止 Visual Effect
         var visualEffect = vfx.GetComponent<VisualEffect>();
         if (visualEffect != null)
         {
             visualEffect.Stop();
-            Debug.Log("Visual Effect stopped.");
+            //Debug.Log("Visual Effect stopped.");
             StartCoroutine(DelayedDeactivation(vfx, 1f)); // 延遲 1 秒
         }
         else
@@ -677,7 +748,7 @@ public class Boss_Ai : MonoBehaviour
         vfx.SetActive(false);
         vfxPool.Enqueue(vfx);
 
-        Debug.Log("VFX returned to pool. Pool count: " + vfxPool.Count);
+        //Debug.Log("VFX returned to pool. Pool count: " + vfxPool.Count);
     }
 
     //=================================================================================================================================================================================
