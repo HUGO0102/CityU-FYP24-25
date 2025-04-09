@@ -48,7 +48,7 @@ public class Boss_Ai : MonoBehaviour
     // Attack Player
     public int timeBetweenAttacks = 2;
     public bool alreadyAttacked;
-    public int minigun_Fire_Density = 10;
+    public int minigun_Fire_Density = 20;
     private int currentFire_Density = 0;
     public float minigun_Fire_Gap = 0.1f;
     private int Attack_SkillsNumber = 0;
@@ -92,7 +92,23 @@ public class Boss_Ai : MonoBehaviour
     [Header("Missile Attack")]
     [SerializeField] private GameObject impactCirclePrefab; // 著彈點預製體
     [SerializeField] private int missileCount = 3; // 一次攻擊生成多少個著彈點
-    [SerializeField] private float missileLaunchDelay = 0.5f; // 每個著彈點之間的延遲
+    [SerializeField] private float missileLaunchDelay = 1.5f; // 每個導彈之間的發射間隔
+    [SerializeField] private int missileBeatsToExpand = 2; // 控制 ImpactCircle 的 beatsToExpand
+
+    [Header("Missile Launch Position")]
+    [SerializeField] private Transform missileLaunchPosition; // 導彈發射位置（例如槍口）
+
+    [Header("Missile Launch VFX")]
+    [SerializeField] private GameObject missileLaunchVFXPrefab; // MissileLaunchVFX 預製體
+    private Queue<GameObject> missileVFXPool = new Queue<GameObject>(); // MissileLaunchVFX 對象池
+    [SerializeField] private int missileVFXPoolSize = 3; // 對象池大小
+    [SerializeField] private float missileVFXDuration = 5f; // MissileLaunchVFX 的播放時長
+
+    [Header("Explosion VFX")]
+    [SerializeField] private GameObject explosionVFXPrefab; // ExplosionVFX 預製體
+    private Queue<GameObject> explosionVFXPool = new Queue<GameObject>(); // ExplosionVFX 對象池
+    [SerializeField] private int explosionVFXPoolSize = 3; // 對象池大小
+    [SerializeField] private float explosionVFXDuration = 5f; // ExplosionVFX 的播放時長
 
 
     // SFX
@@ -118,12 +134,28 @@ public class Boss_Ai : MonoBehaviour
 
     private void Start()
     {
-        // 初始化 VFX 對象池
+        // 初始化 Muzzle Flash VFX 對象池
         for (int i = 0; i < vfxPoolSize; i++)
         {
             GameObject vfx = Instantiate(shootingVFXPrefab);
             vfx.SetActive(false);
             vfxPool.Enqueue(vfx);
+        }
+
+        // 初始化 MissileLaunchVFX 對象池
+        for (int i = 0; i < missileVFXPoolSize; i++)
+        {
+            GameObject missileVFX = Instantiate(missileLaunchVFXPrefab);
+            missileVFX.SetActive(false);
+            missileVFXPool.Enqueue(missileVFX);
+        }
+
+        // 初始化 ExplosionVFX 對象池
+        for (int i = 0; i < explosionVFXPoolSize; i++)
+        {
+            GameObject explosionVFX = Instantiate(explosionVFXPrefab);
+            explosionVFX.SetActive(false);
+            explosionVFXPool.Enqueue(explosionVFX);
         }
     }
 
@@ -517,6 +549,8 @@ public class Boss_Ai : MonoBehaviour
             StartCoroutine(FadeInLight(leftLights, lightFadeDuration));
         }
 
+        currentFire_Density = currentFire_Density * 2;
+
         // 開始交替射擊
         while (i <= currentFire_Density)
         {
@@ -592,21 +626,23 @@ public class Boss_Ai : MonoBehaviour
     private void MissileAttack()
     {
         isAttack = true;
-        StartCoroutine(LaunchMissiles());
+        int beats = lowHealth ? missileBeatsToExpand/2+1 : missileBeatsToExpand+1;
+        StartCoroutine(LaunchMissiles(beats)); // 傳遞 beatsToExpand
     }
 
-    private IEnumerator LaunchMissiles()
+    private IEnumerator LaunchMissiles(int beatsToExpand)
     {
         isAttack = true;
 
         for (int i = 0; i < missileCount; i++)
         {
+            // 計算玩家的當前位置
             Vector3 targetPosition = player.position;
 
-            CapsuleCollider playerCollider = player.GetComponent<CapsuleCollider>();
-            if (playerCollider != null)
+            CharacterController playerController = player.GetComponent<CharacterController>();
+            if (playerController != null)
             {
-                float playerHeight = playerCollider.height;
+                float playerHeight = playerController.height;
                 Vector3 feetPosition = targetPosition - new Vector3(0f, playerHeight / 2f, 0f);
 
                 RaycastHit hit;
@@ -614,34 +650,86 @@ public class Boss_Ai : MonoBehaviour
                 {
                     targetPosition = hit.point;
                 }
+                else
+                {
+                    if (Physics.Raycast(targetPosition + Vector3.up * 2f, Vector3.down, out hit, 3f, whatIsGround))
+                    {
+                        targetPosition = hit.point;
+                    }
+                }
             }
             else
             {
-                targetPosition -= new Vector3(0f, 1f, 0f);
                 RaycastHit hit;
-                if (Physics.Raycast(targetPosition + Vector3.up * 1f, Vector3.down, out hit, 2f, whatIsGround))
+                if (Physics.Raycast(targetPosition + Vector3.up * 2f, Vector3.down, out hit, 3f, whatIsGround))
                 {
                     targetPosition = hit.point;
                 }
             }
 
-            // 生成著彈點
-            GameObject impactCircle = Instantiate(impactCirclePrefab, targetPosition, Quaternion.identity);
-            ImpactCircle circleScript = impactCircle.GetComponent<ImpactCircle>();
-            if (circleScript != null)
-            {
-                // 根據 Boss 血量動態調整拍子數量
-                int beatsToExpand = health > (health / 2) ? 8 : 4; // 血量高於 50% 時 8 拍，低於 50% 時 4 拍
-                circleScript.SetBeatsToExpand(beatsToExpand); // 動態設置拍子數量
-                circleScript.SetPosition(targetPosition);
-                circleScript.StartExpanding();
-            }
+            // 啟動一個獨立的協程來處理 MissileLaunchVFX 和 ImpactCircle
+            StartCoroutine(HandleMissileLaunch(targetPosition, beatsToExpand));
 
+            // 等待 missileLaunchDelay 後發射下一個導彈
             yield return new WaitForSeconds(missileLaunchDelay);
         }
 
         isAttack = false;
         Invoke("ResetAttack", timeBetweenAttacks + 5);
+    }
+
+
+
+    private IEnumerator HandleMissileLaunch(Vector3 targetPosition, int beatsToExpand)
+    {
+        // 播放 MissileLaunchVFX
+        GameObject missileVFX = GetMissileVFXFromPool(transform);
+        if (missileVFX != null)
+        {
+            yield return new WaitForSeconds(missileVFXDuration); // 等待 VFX 播放完成（5 秒）
+            ReturnMissileVFXToPool(missileVFX);
+        }
+
+        // 在生成 ImpactCircle 時，重新計算玩家的當前位置
+        targetPosition = player.position;
+
+        CharacterController playerController = player.GetComponent<CharacterController>();
+        if (playerController != null)
+        {
+            float playerHeight = playerController.height;
+            Vector3 feetPosition = targetPosition - new Vector3(0f, playerHeight / 2f, 0f);
+
+            RaycastHit hit;
+            if (Physics.Raycast(feetPosition + Vector3.up * 0.5f, Vector3.down, out hit, 1f, whatIsGround))
+            {
+                targetPosition = hit.point;
+            }
+            else
+            {
+                if (Physics.Raycast(targetPosition + Vector3.up * 2f, Vector3.down, out hit, 3f, whatIsGround))
+                {
+                    targetPosition = hit.point;
+                }
+            }
+        }
+        else
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(targetPosition + Vector3.up * 2f, Vector3.down, out hit, 3f, whatIsGround))
+            {
+                targetPosition = hit.point;
+            }
+        }
+
+        // 生成 ImpactCircle
+        GameObject impactCircle = Instantiate(impactCirclePrefab, targetPosition, Quaternion.identity);
+        ImpactCircle circleScript = impactCircle.GetComponent<ImpactCircle>();
+        if (circleScript != null)
+        {
+            circleScript.SetBeatsToExpand(beatsToExpand);
+            circleScript.SetPosition(targetPosition);
+            circleScript.StartExpanding();
+        }
     }
 
 
@@ -714,6 +802,10 @@ public class Boss_Ai : MonoBehaviour
         return vfx;
     }
 
+
+   
+
+
     private void ReturnVFXToPool(GameObject vfx)
     {
         //Debug.Log("Returning VFX to pool.");
@@ -731,6 +823,9 @@ public class Boss_Ai : MonoBehaviour
             DeactivateVFX(vfx);
         }
     }
+
+
+
 
     private IEnumerator DelayedDeactivation(GameObject vfx, float delay)
     {
@@ -751,7 +846,149 @@ public class Boss_Ai : MonoBehaviour
         //Debug.Log("VFX returned to pool. Pool count: " + vfxPool.Count);
     }
 
+
+
     //=================================================================================================================================================================================
+
+
+    private GameObject GetMissileVFXFromPool(Transform launchPosition)
+    {
+        GameObject vfx;
+        if (missileVFXPool.Count > 0)
+        {
+            vfx = missileVFXPool.Dequeue();
+            vfx.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning("Missile VFX pool is empty! Instantiating new VFX.");
+            vfx = Instantiate(missileLaunchVFXPrefab);
+        }
+
+        // 設置位置和旋轉
+        vfx.transform.position = missileLaunchPosition != null ? missileLaunchPosition.position : launchPosition.position;
+        vfx.transform.rotation = missileLaunchPosition != null ? missileLaunchPosition.rotation : launchPosition.rotation;
+
+        // 播放 Visual Effect
+        var visualEffect = vfx.GetComponent<VisualEffect>();
+        if (visualEffect != null)
+        {
+            visualEffect.Stop();
+            visualEffect.Reinit();
+            visualEffect.Play();
+        }
+        else
+        {
+            Debug.LogError("VisualEffect component not found on MissileLaunchVFX object!");
+        }
+
+        return vfx;
+    }
+
+
+
+
+    private void ReturnMissileVFXToPool(GameObject vfx)
+    {
+        var visualEffect = vfx.GetComponent<VisualEffect>();
+        if (visualEffect != null)
+        {
+            visualEffect.Stop();
+            StartCoroutine(DelayedDeactivationMissileVFX(vfx, 1f)); // 延遲 1 秒以確保粒子消失
+        }
+        else
+        {
+            DeactivateMissileVFX(vfx);
+        }
+    }
+
+
+    private IEnumerator DelayedDeactivationMissileVFX(GameObject vfx, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        DeactivateMissileVFX(vfx);
+    }
+
+    private void DeactivateMissileVFX(GameObject vfx)
+    {
+        vfx.transform.position = Vector3.zero;
+        vfx.transform.rotation = Quaternion.identity;
+        vfx.SetActive(false);
+        missileVFXPool.Enqueue(vfx);
+    }
+
+
+    //=================================================================================================================================================================================
+
+
+
+    public GameObject GetExplosionVFXFromPool(Vector3 position)
+    {
+        if (explosionVFXPrefab == null)
+        {
+            Debug.LogError("ExplosionVFXPrefab is not set in Boss_Ai!");
+            return null;
+        }
+
+        GameObject vfx;
+        if (explosionVFXPool.Count > 0)
+        {
+            vfx = explosionVFXPool.Dequeue();
+            vfx.SetActive(true);
+            Debug.Log("Reusing ExplosionVFX from pool.");
+        }
+        else
+        {
+            Debug.LogWarning("Explosion VFX pool is empty! Instantiating new VFX.");
+            vfx = Instantiate(explosionVFXPrefab);
+        }
+
+
+        vfx.transform.position = position + new Vector3(0f, 1f, 0f);
+        vfx.transform.rotation = Quaternion.identity;
+
+        var visualEffect = vfx.GetComponent<VisualEffect>();
+        if (visualEffect != null)
+        {
+            visualEffect.Stop();
+            visualEffect.Reinit();
+            visualEffect.Play();
+            Debug.Log("ExplosionVFX played at position: " + vfx.transform.position);
+        }
+        else
+        {
+            Debug.LogError("VisualEffect component not found on ExplosionVFX object!");
+        }
+
+        StartCoroutine(ReturnExplosionVFXAfterDuration(vfx, explosionVFXDuration));
+        return vfx;
+    }
+
+    private IEnumerator ReturnExplosionVFXAfterDuration(GameObject vfx, float duration)
+    {
+        yield return new WaitForSeconds(duration); // 直接設置 5 秒
+        ReturnExplosionVFXToPool(vfx);
+    }
+
+    private void ReturnExplosionVFXToPool(GameObject vfx)
+    {
+        var visualEffect = vfx.GetComponent<VisualEffect>();
+        if (visualEffect != null)
+        {
+            visualEffect.Stop();
+        }
+
+        vfx.transform.position = Vector3.zero;
+        vfx.transform.rotation = Quaternion.identity;
+        vfx.SetActive(false);
+        explosionVFXPool.Enqueue(vfx);
+    }
+
+
+
+
+    //=================================================================================================================================================================================
+
 
     public void TakeDamage(int damage)
     {
