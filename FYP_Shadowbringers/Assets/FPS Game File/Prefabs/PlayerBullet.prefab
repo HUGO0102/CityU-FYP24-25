@@ -253,3 +253,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hitEffect: {fileID: 3079907916753527066, guid: 5fbf6db1c8732d94ba4253f1cb65303a,
     type: 3}
+  shieldHitEffect: {fileID: 3079907916753527066, guid: 5fbf6db1c8732d94ba4253f1cb65303a,
+    type: 3}

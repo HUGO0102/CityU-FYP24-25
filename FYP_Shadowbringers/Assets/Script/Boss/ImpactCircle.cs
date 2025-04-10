@@ -3,18 +3,18 @@ using UnityEngine;
 
 public class ImpactCircle : MonoBehaviour
 {
-    [SerializeField] private Transform innerCircle; // 紅色圓形（會放大）
-    [SerializeField] private Transform outerCircle; // 外圈（固定大小）
+    [SerializeField] public Transform innerCircle; // 紅色圓形（會放大）
+    [SerializeField] public Transform outerCircle; // 外圈（固定大小）
     [SerializeField] private float initialScale = 0f; // 初始大小（從中心開始）
-    [SerializeField] private float maxScale = 8f; // 最大大小（應與 OuterCircle 的大小一致）
+    [SerializeField] public float maxScale = 8f; // 最大大小（應與 OuterCircle 的大小一致）
     [SerializeField] public int beatsToExpand = 4; // 放大所需的拍子數量（可調整難度）
-    [SerializeField] private float damage = 10f; // 對玩家造成的傷害
+    [SerializeField] public float damage = 10f; // 對玩家造成的傷害
     [SerializeField] private Color startColor = new Color(1f, 0f, 0f, 0.3f); // 起始顏色（半透明紅色）
     [SerializeField] private Color endColor = new Color(1f, 0f, 0f, 1f); // 結束顏色（實色紅色）
 
     private float currentScale;
     private int currentBeatCount = 0; // 當前拍子計數
-    private bool isExpanding = false;
+    protected bool isExpanding = false; // 改為 protected 以便子類訪問
     private Material circleMaterial;
     private float outerCircleScale; // 儲存 OuterCircle 的大小
     private float scalePerBeat; // 每拍的縮放增量
@@ -57,7 +57,6 @@ public class ImpactCircle : MonoBehaviour
 
         // 計算每拍的縮放增量
         scalePerBeat = (maxScale - initialScale) / beatsToExpand;
-
     }
 
     public void StartExpanding()
@@ -106,7 +105,7 @@ public class ImpactCircle : MonoBehaviour
         }
     }
 
-    private IEnumerator FadeOutCircle(Transform circle, float duration)
+    protected IEnumerator FadeOutCircle(Transform circle, float duration) // 改為 protected 以便子類訪問
     {
         Renderer renderer = circle.GetComponent<Renderer>();
         if (renderer == null) yield break;
@@ -126,7 +125,7 @@ public class ImpactCircle : MonoBehaviour
         circle.gameObject.SetActive(false);
     }
 
-    private void Explode()
+    protected virtual void Explode() // 改為 protected virtual 以便子類覆寫
     {
         Boss_Ai boss = FindObjectOfType<Boss_Ai>();
         if (boss != null)

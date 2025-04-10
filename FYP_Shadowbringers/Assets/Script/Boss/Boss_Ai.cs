@@ -23,7 +23,8 @@ public class Boss_Ai : MonoBehaviour
     public GameObject DestroyObj;
 
     // Stats
-    public int health;
+    [SerializeField] public int health;
+    [SerializeField] private int maxHealth;
     [SerializeField] public bool lowHealth;
 
     // Check for Ground/Obstacles
@@ -44,6 +45,17 @@ public class Boss_Ai : MonoBehaviour
     public float sightRange, attackRange;
     public bool playerInSightRange, playerInAttackRange;
 
+    // VFX
+    [Header("OnHit VFX")]
+    [SerializeField] public ParticleSystem spark;
+    [SerializeField] public ParticleSystem onHitVFX;
+
+
+    //===================================================================================================================================================================================================
+
+
+
+
     [Header("MiniGun Attack")]
     // Attack Player
     public int timeBetweenAttacks = 2;
@@ -53,12 +65,6 @@ public class Boss_Ai : MonoBehaviour
     public float minigun_Fire_Gap = 0.1f;
     private int Attack_SkillsNumber = 0;
     private int RanNum = 0;
-
-
-    // VFX
-    [Header("OnHit VFX")]
-    [SerializeField] public ParticleSystem spark;
-    [SerializeField] public ParticleSystem onHitVFX;
 
     [Header("MiniGun VFX")]
     bool vfxIsCreated = false;
@@ -84,9 +90,11 @@ public class Boss_Ai : MonoBehaviour
 
     [Header("Settings")]
     [Tooltip("Specify time to destroy the VFX object")][SerializeField] private float destroyTimer = 2f;
-    [Tooltip("Bullet Speed")][SerializeField] private float shotPower = 500f;
+    [Tooltip("Bullet Speed")][SerializeField] private float shotPower = 600f;
     [Tooltip("Point Light Intensity")][SerializeField] private float maxLightIntensity = 2f;
     [Tooltip("Point Light Fade Duration")][SerializeField] private float lightFadeDuration = 0.5f;
+
+    //===================================================================================================================================================================================================
 
 
     [Header("Missile Attack")]
@@ -111,6 +119,50 @@ public class Boss_Ai : MonoBehaviour
     [SerializeField] private float explosionVFXDuration = 5f; // ExplosionVFX 的播放時長
 
 
+    //===================================================================================================================================================================================================
+
+
+    [Header("Mini Missile Attack")]
+    [SerializeField] private GameObject miniImpactCirclePrefab; // 小型導彈的著彈點預製體
+    [SerializeField] private int miniMissileCount = 10; // 一次攻擊生成多少個小型導彈
+    [SerializeField] private float miniMissileLaunchDelay = 0.2f; // 每個小型導彈之間的發射間隔
+    [SerializeField] private int miniMissileBeatsToExpand = 8; // 小型導彈的 ImpactCircle 的 beatsToExpand
+    [SerializeField] private float randomRadius = 10f; // 小型導彈著陸點的隨機半徑（以玩家為中心）
+    [SerializeField] private float minDistanceBetweenCircles = 2f; // 著彈點之間的最小間距（根據 MiniImpactCircle 的爆炸範圍調整）
+    [SerializeField] private float innerRadiusFactor = 0.5f; // 內圈半徑比例（相對於 randomRadius）
+    [SerializeField] private float innerCircleRatio = 0.3f; // 內圈著彈點的比例（0 到 1）
+    [SerializeField] private float innerConcentrationFactor = 0.3f; // 內圈的集中因子（值越小越集中）
+    [SerializeField] private float outerConcentrationFactor = 0.7f; // 外圈的集中因子（值越大越分散）
+    [SerializeField] private float innerOuterGap = 0.7f; // 內圈和外圈之間的時間差
+
+    [Header("Mini Missile Attack (LowHealth Mode)")]
+    [SerializeField] private int lowHealthMiniMissileCount = 20; // 低血量時的導彈數量
+    [SerializeField] private float lowHealthMiniMissileLaunchDelay = 0.125f; // 低血量時的發射間隔
+    [SerializeField] private float lowHealthInnerCircleRatio = 0.1f; // 低血量時內圈著彈點的比例
+    [SerializeField] private float lowHealthInnerConcentrationFactor = 0.1f; // 低血量時內圈的集中因子
+    [SerializeField] private float lowHealthInnerOuterGap = 0.3f; // 內圈和外圈之間的時間差
+
+    [Header("Mini Missile Launch Positions")]
+    [SerializeField] private Transform leftMiniMissileSpawnPoint; // 左側小型導彈發射點 (L_MINIMISSILE_SPAWNPOINT)
+    [SerializeField] private Transform rightMiniMissileSpawnPoint; // 右側小型導彈發射點 (R_MINIMISSILE_SPAWNPOINT)
+
+    [Header("Mini Missile Launch VFX")]
+    [SerializeField] private GameObject miniMissileLaunchVFXPrefab; // MiniMissileSwarm VFX 預製體
+    private Queue<GameObject> miniMissileVFXPool = new Queue<GameObject>(); // MiniMissileSwarm VFX 對象池
+    [SerializeField] private int miniMissileVFXPoolSize = 10; // 對象池大小
+    [SerializeField] private float miniMissileVFXDuration = 3f; // MiniMissileSwarm VFX 的播放時長
+
+    [Header("Mini Explosion VFX")]
+    [SerializeField] private GameObject miniExplosionVFXPrefab; // MiniExplosion VFX 預製體
+    private Queue<GameObject> miniExplosionVFXPool = new Queue<GameObject>(); // MiniExplosion VFX 對象池
+    [SerializeField] private int miniExplosionVFXPoolSize = 10; // 對象池大小
+    [SerializeField] private float miniExplosionVFXDuration = 3f; // MiniExplosion VFX 的播放時長
+
+
+
+    //===================================================================================================================================================================================================
+
+
     // SFX
     [Header("SoundFX")]
     public AudioSource enemyAudioSource;
@@ -118,6 +170,9 @@ public class Boss_Ai : MonoBehaviour
     public AudioClip[] enemyAudioClip;
     private float volumeChangeMultiplier = 0.2f;
     private float pitchChangeMultiplier = 0.2f;
+
+
+    //===================================================================================================================================================================================================
 
     private void Awake()
     {
@@ -134,6 +189,8 @@ public class Boss_Ai : MonoBehaviour
 
     private void Start()
     {
+        maxHealth = health;
+
         // 初始化 Muzzle Flash VFX 對象池
         for (int i = 0; i < vfxPoolSize; i++)
         {
@@ -157,6 +214,22 @@ public class Boss_Ai : MonoBehaviour
             explosionVFX.SetActive(false);
             explosionVFXPool.Enqueue(explosionVFX);
         }
+
+        // 初始化 MiniMissileSwarm VFX 對象池
+        for (int i = 0; i < miniMissileVFXPoolSize; i++)
+        {
+            GameObject miniMissileVFX = Instantiate(miniMissileLaunchVFXPrefab);
+            miniMissileVFX.SetActive(false);
+            miniMissileVFXPool.Enqueue(miniMissileVFX);
+        }
+
+        // 初始化 MiniExplosion VFX 對象池
+        for (int i = 0; i < miniExplosionVFXPoolSize; i++)
+        {
+            GameObject miniExplosionVFX = Instantiate(miniExplosionVFXPrefab);
+            miniExplosionVFX.SetActive(false);
+            miniExplosionVFXPool.Enqueue(miniExplosionVFX);
+        }
     }
 
     private void Update()
@@ -164,7 +237,7 @@ public class Boss_Ai : MonoBehaviour
         SwitchAnimation();
 
         // 根據血量調整攻擊參數
-        if (health <= (health / 2))
+        if (health <= (maxHealth / 2))
         {
             lowHealth = true;
             currentFire_Density = minigun_Fire_Density * 2; // 增加射擊密度
@@ -274,29 +347,35 @@ public class Boss_Ai : MonoBehaviour
         rBarrelLocation.LookAt(player.position);
         lBarrelLocation.LookAt(player.position);
 
-        // 確保敵人不移動
+        // 確保Boss不移動
         agent.SetDestination(transform.position);
 
         if (!alreadyAttacked)
         {
             while (Attack_SkillsNumber == RanNum)
             {
-                Attack_SkillsNumber = Random.Range(0, 4); // 增加到 3 種模式
+                Attack_SkillsNumber = Random.Range(0, 5); // 增加到 5 種模式
             }
             RanNum = Attack_SkillsNumber;
 
             switch (Attack_SkillsNumber)
             {
+                case 4:
+                    MiniMissileSwarmAttack(); // 小型導彈群攻擊
+                    print("Mini Missile Swarm Attack");
+                    break;
                 case 3:
                     MissileAttack(); // 導彈攻擊技能
                     print("Missile Attack");
                     break;
                 case 2:
-                    GunAttackBoth(); // 同時使用左右槍口
+                    MiniMissileSwarmAttack();
+                    //GunAttackBoth(); // 同時使用左右槍口
                     print("Both Guns Attack");
                     break;
                 case 1:
-                    GunAttackRight(); // 僅使用右槍口
+                    MiniMissileSwarmAttack();
+                    //GunAttackRight(); // 僅使用右槍口
                     print("Right Gun Attack");
                     break;
                 case 0:
@@ -309,6 +388,13 @@ public class Boss_Ai : MonoBehaviour
             alreadyAttacked = true;
         }
     }
+
+
+
+
+    //=================================================================================================================================================================================
+
+
 
     private void GunAttackRight()
     {
@@ -621,7 +707,128 @@ public class Boss_Ai : MonoBehaviour
         alreadyAttacked = false;
     }
 
+
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+    private GameObject GetVFXFromPool(Transform barrel, bool isRightBarrel)
+    {
+        //Debug.Log("Getting VFX from pool. Pool count: " + vfxPool.Count);
+
+        GameObject vfx;
+        if (vfxPool.Count > 0)
+        {
+            vfx = vfxPool.Dequeue();
+            vfx.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning("VFX pool is empty! Instantiating new VFX.");
+            vfx = Instantiate(shootingVFXPrefab);
+        }
+
+        // 設置位置和旋轉
+        vfx.transform.SetParent(barrel);
+        vfx.transform.localPosition = Vector3.zero;
+        vfx.transform.localRotation = Quaternion.identity;
+
+        // 翻轉左邊槍口的 VFX
+        if (!isRightBarrel)
+        {
+            Vector3 localScale = vfx.transform.localScale;
+            vfx.transform.localScale = new Vector3(-localScale.x, localScale.y, localScale.z);
+        }
+
+        // 控制 Visual Effect 的播放
+        var visualEffect = vfx.GetComponent<VisualEffect>();
+        if (visualEffect != null)
+        {
+            // 重置 Visual Effect
+            visualEffect.Stop();
+            visualEffect.Reinit();
+            //Debug.Log("Visual Effect initialized for barrel: " + (isRightBarrel ? "Right" : "Left"));
+
+            // 設置播放參數（例如 Spawn Rate 或 Delay）
+            if (visualEffect.HasFloat("fire_delay"))
+            {
+                visualEffect.SetFloat("fire_delay", minigun_Fire_Gap);
+                //Debug.Log("Set fire_delay to: " + fire_Gap);
+            }
+            else
+            {
+                Debug.LogWarning("fire_delay parameter not found in Visual Effect!");
+            }
+
+            // 設置粒子生成頻率（如果 VFX Graph 有此參數）
+            if (visualEffect.HasFloat("spawnRate"))
+            {
+                visualEffect.SetFloat("spawnRate", 1f / minigun_Fire_Gap);
+                //Debug.Log("Set spawnRate to: " + (1f / fire_Gap));
+            }
+
+            // 播放 Visual Effect
+            visualEffect.Play();
+            //Debug.Log("Visual Effect played for barrel: " + (isRightBarrel ? "Right" : "Left"));
+        }
+        else
+        {
+            Debug.LogError("VisualEffect component not found on VFX object!");
+        }
+
+        return vfx;
+    }
+
+
+
+
+
+    private void ReturnVFXToPool(GameObject vfx)
+    {
+        //Debug.Log("Returning VFX to pool.");
+
+        // 停止 Visual Effect
+        var visualEffect = vfx.GetComponent<VisualEffect>();
+        if (visualEffect != null)
+        {
+            visualEffect.Stop();
+            //Debug.Log("Visual Effect stopped.");
+            StartCoroutine(DelayedDeactivation(vfx, 1f)); // 延遲 1 秒
+        }
+        else
+        {
+            DeactivateVFX(vfx);
+        }
+    }
+
+
+
+
+    private IEnumerator DelayedDeactivation(GameObject vfx, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        DeactivateVFX(vfx);
+    }
+
+    private void DeactivateVFX(GameObject vfx)
+    {
+        vfx.transform.SetParent(null);
+        vfx.transform.localPosition = Vector3.zero;
+        vfx.transform.localRotation = Quaternion.identity;
+        vfx.transform.localScale = Vector3.one;
+
+        vfx.SetActive(false);
+        vfxPool.Enqueue(vfx);
+
+        //Debug.Log("VFX returned to pool. Pool count: " + vfxPool.Count);
+    }
+
+
+
     //=================================================================================================================================================================================
+
+
 
     private void MissileAttack()
     {
@@ -733,122 +940,11 @@ public class Boss_Ai : MonoBehaviour
     }
 
 
-    //=================================================================================================================================================================================
-
-    private GameObject GetVFXFromPool(Transform barrel, bool isRightBarrel)
-    {
-        //Debug.Log("Getting VFX from pool. Pool count: " + vfxPool.Count);
-
-        GameObject vfx;
-        if (vfxPool.Count > 0)
-        {
-            vfx = vfxPool.Dequeue();
-            vfx.SetActive(true);
-        }
-        else
-        {
-            Debug.LogWarning("VFX pool is empty! Instantiating new VFX.");
-            vfx = Instantiate(shootingVFXPrefab);
-        }
-
-        // 設置位置和旋轉
-        vfx.transform.SetParent(barrel);
-        vfx.transform.localPosition = Vector3.zero;
-        vfx.transform.localRotation = Quaternion.identity;
-
-        // 翻轉左邊槍口的 VFX
-        if (!isRightBarrel)
-        {
-            Vector3 localScale = vfx.transform.localScale;
-            vfx.transform.localScale = new Vector3(-localScale.x, localScale.y, localScale.z);
-        }
-
-        // 控制 Visual Effect 的播放
-        var visualEffect = vfx.GetComponent<VisualEffect>();
-        if (visualEffect != null)
-        {
-            // 重置 Visual Effect
-            visualEffect.Stop();
-            visualEffect.Reinit();
-            //Debug.Log("Visual Effect initialized for barrel: " + (isRightBarrel ? "Right" : "Left"));
-
-            // 設置播放參數（例如 Spawn Rate 或 Delay）
-            if (visualEffect.HasFloat("fire_delay"))
-            {
-                visualEffect.SetFloat("fire_delay", minigun_Fire_Gap);
-                //Debug.Log("Set fire_delay to: " + fire_Gap);
-            }
-            else
-            {
-                Debug.LogWarning("fire_delay parameter not found in Visual Effect!");
-            }
-
-            // 設置粒子生成頻率（如果 VFX Graph 有此參數）
-            if (visualEffect.HasFloat("spawnRate"))
-            {
-                visualEffect.SetFloat("spawnRate", 1f / minigun_Fire_Gap);
-                //Debug.Log("Set spawnRate to: " + (1f / fire_Gap));
-            }
-
-            // 播放 Visual Effect
-            visualEffect.Play();
-            //Debug.Log("Visual Effect played for barrel: " + (isRightBarrel ? "Right" : "Left"));
-        }
-        else
-        {
-            Debug.LogError("VisualEffect component not found on VFX object!");
-        }
-
-        return vfx;
-    }
 
 
-   
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-    private void ReturnVFXToPool(GameObject vfx)
-    {
-        //Debug.Log("Returning VFX to pool.");
-
-        // 停止 Visual Effect
-        var visualEffect = vfx.GetComponent<VisualEffect>();
-        if (visualEffect != null)
-        {
-            visualEffect.Stop();
-            //Debug.Log("Visual Effect stopped.");
-            StartCoroutine(DelayedDeactivation(vfx, 1f)); // 延遲 1 秒
-        }
-        else
-        {
-            DeactivateVFX(vfx);
-        }
-    }
-
-
-
-
-    private IEnumerator DelayedDeactivation(GameObject vfx, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        DeactivateVFX(vfx);
-    }
-
-    private void DeactivateVFX(GameObject vfx)
-    {
-        vfx.transform.SetParent(null);
-        vfx.transform.localPosition = Vector3.zero;
-        vfx.transform.localRotation = Quaternion.identity;
-        vfx.transform.localScale = Vector3.one;
-
-        vfx.SetActive(false);
-        vfxPool.Enqueue(vfx);
-
-        //Debug.Log("VFX returned to pool. Pool count: " + vfxPool.Count);
-    }
-
-
-
-    //=================================================================================================================================================================================
 
 
     private GameObject GetMissileVFXFromPool(Transform launchPosition)
@@ -918,10 +1014,6 @@ public class Boss_Ai : MonoBehaviour
     }
 
 
-    //=================================================================================================================================================================================
-
-
-
     public GameObject GetExplosionVFXFromPool(Vector3 position)
     {
         if (explosionVFXPrefab == null)
@@ -985,6 +1077,396 @@ public class Boss_Ai : MonoBehaviour
     }
 
 
+
+
+    //=================================================================================================================================================================================
+
+
+
+    private void MiniMissileSwarmAttack()
+    {
+        isAttack = true;
+        int beats = lowHealth ? miniMissileBeatsToExpand / 2 + 1 : miniMissileBeatsToExpand + 1;
+        StartCoroutine(LaunchMiniMissileSwarm(beats));
+    }
+
+
+    private IEnumerator LaunchMiniMissileSwarm(int beatsToExpand)
+    {
+        isAttack = true;
+        bool useRightSpawnPoint = true; // 從右側開始發射
+
+        // 用於記錄已生成的著彈點位置
+        List<Vector3> usedPositions = new List<Vector3>();
+        int maxPlacementAttempts = 50; // 最大嘗試次數，避免無限循環
+
+        // 根據 lowHealth 動態選擇參數
+        int currentMiniMissileCount = lowHealth ? lowHealthMiniMissileCount : miniMissileCount;
+        float currentMiniMissileLaunchDelay = lowHealth ? lowHealthMiniMissileLaunchDelay : miniMissileLaunchDelay;
+        float currentInnerCircleRatio = lowHealth ? lowHealthInnerCircleRatio : innerCircleRatio;
+        float currentInnerConcentrationFactor = lowHealth ? lowHealthInnerConcentrationFactor : innerConcentrationFactor;
+
+        // 動態調整最小間距
+        float adjustedMinDistance = Mathf.Min(minDistanceBetweenCircles, randomRadius / Mathf.Sqrt(currentMiniMissileCount));
+        Debug.Log($"Adjusted Min Distance: {adjustedMinDistance} (Original: {minDistanceBetweenCircles}, Random Radius: {randomRadius}, Missile Count: {currentMiniMissileCount})");
+
+        // 計算內圈和外圈的著彈點數量
+        int innerCircleCount = Mathf.RoundToInt(currentMiniMissileCount * currentInnerCircleRatio); // 內圈著彈點數量
+        int outerCircleCount = currentMiniMissileCount - innerCircleCount; // 外圈著彈點數量
+        float innerRadius = randomRadius * innerRadiusFactor; // 內圈半徑
+
+        Debug.Log($"Inner Circle Count: {innerCircleCount}, Outer Circle Count: {outerCircleCount}, Inner Radius: {innerRadius}");
+
+        // 先生成內圈的著彈點
+        for (int i = 0; i < innerCircleCount; i++)
+        {
+            // 選擇當前的發射點
+            Transform selectedSpawnPoint = useRightSpawnPoint ? rightMiniMissileSpawnPoint : leftMiniMissileSpawnPoint;
+
+            // 計算玩家的當前位置
+            Vector3 playerPosition = player.position;
+
+            // 隨機生成一個著陸點（內圈），確保不重疊
+            Vector3 targetPosition = Vector3.zero;
+            bool positionFound = false;
+            int attempts = 0;
+
+            while (!positionFound && attempts < maxPlacementAttempts)
+            {
+                // 隨機生成一個角度和距離，使用平方根分佈使著彈點更集中
+                float randomAngle = Random.Range(0f, 360f);
+                float randomValue = Random.Range(0f, 1f);
+                float randomDistance = innerRadius * Mathf.Sqrt(randomValue) * (1f - currentInnerConcentrationFactor) + innerRadius * currentInnerConcentrationFactor * randomValue;
+
+                Vector3 offset = new Vector3(
+                    Mathf.Cos(randomAngle * Mathf.Deg2Rad) * randomDistance,
+                    0f,
+                    Mathf.Sin(randomAngle * Mathf.Deg2Rad) * randomDistance
+                );
+                targetPosition = playerPosition + offset;
+
+                // 確保著陸點在地面上
+                CharacterController playerController = player.GetComponent<CharacterController>();
+                if (playerController != null)
+                {
+                    float playerHeight = playerController.height;
+                    Vector3 feetPosition = targetPosition - new Vector3(0f, playerHeight / 2f, 0f);
+
+                    RaycastHit hit;
+                    if (Physics.Raycast(feetPosition + Vector3.up * 0.5f, Vector3.down, out hit, 1f, whatIsGround))
+                    {
+                        targetPosition = hit.point;
+                    }
+                    else
+                    {
+                        if (Physics.Raycast(targetPosition + Vector3.up * 2f, Vector3.down, out hit, 3f, whatIsGround))
+                        {
+                            targetPosition = hit.point;
+                        }
+                    }
+                }
+                else
+                {
+                    RaycastHit hit;
+                    if (Physics.Raycast(targetPosition + Vector3.up * 2f, Vector3.down, out hit, 3f, whatIsGround))
+                    {
+                        targetPosition = hit.point;
+                    }
+                }
+
+                // 檢查與已有著彈點的距離
+                positionFound = true;
+                foreach (Vector3 usedPos in usedPositions)
+                {
+                    if (Vector3.Distance(targetPosition, usedPos) < adjustedMinDistance)
+                    {
+                        positionFound = false;
+                        break;
+                    }
+                }
+
+                attempts++;
+            }
+
+            // 如果無法找到不重疊的位置，使用最後一次嘗試的位置（避免無限循環）
+            if (!positionFound)
+            {
+                Debug.LogWarning($"Could not find non-overlapping position for Inner MiniImpactCircle {i + 1} after {maxPlacementAttempts} attempts. Using last position.");
+            }
+
+            // 記錄當前著彈點位置
+            usedPositions.Add(targetPosition);
+
+            // 啟動一個獨立的協程來處理 MiniMissileSwarm VFX 和 MiniImpactCircle
+            StartCoroutine(HandleMiniMissileLaunch(selectedSpawnPoint, targetPosition, beatsToExpand));
+
+            // 等待動態計算的 miniMissileLaunchDelay 後發射下一個小型導彈
+            yield return new WaitForSeconds(currentMiniMissileLaunchDelay);
+
+            // 交替使用左右發射點
+            useRightSpawnPoint = !useRightSpawnPoint;
+        }
+
+
+
+        // 內圈生成後等待一段時間
+        float waitSeconds = lowHealth ? innerOuterGap : lowHealthInnerOuterGap;
+        yield return new WaitForSeconds(waitSeconds); // 內圈和外圈之間的時間差
+
+
+        // 再生成外圈的著彈點
+        for (int i = 0; i < outerCircleCount; i++)
+        {
+            // 選擇當前的發射點
+            Transform selectedSpawnPoint = useRightSpawnPoint ? rightMiniMissileSpawnPoint : leftMiniMissileSpawnPoint;
+
+            // 計算玩家的當前位置
+            Vector3 playerPosition = player.position;
+
+            // 隨機生成一個著陸點（外圈），確保不重疊
+            Vector3 targetPosition = Vector3.zero;
+            bool positionFound = false;
+            int attempts = 0;
+
+            while (!positionFound && attempts < maxPlacementAttempts)
+            {
+                // 隨機生成一個角度和距離，使用平方根分佈
+                float randomAngle = Random.Range(0f, 360f);
+                float randomValue = Random.Range(0f, 1f);
+                float randomDistance = randomRadius * Mathf.Sqrt(randomValue) * (1f - outerConcentrationFactor) + randomRadius * outerConcentrationFactor * randomValue;
+
+                // 確保外圈的點不會進入內圈（限制最小距離）
+                if (randomDistance < innerRadius)
+                {
+                    randomDistance = Mathf.Lerp(innerRadius, randomRadius, randomValue);
+                }
+
+                Vector3 offset = new Vector3(
+                    Mathf.Cos(randomAngle * Mathf.Deg2Rad) * randomDistance,
+                    0f,
+                    Mathf.Sin(randomAngle * Mathf.Deg2Rad) * randomDistance
+                );
+                targetPosition = playerPosition + offset;
+
+                // 確保著陸點在地面上
+                CharacterController playerController = player.GetComponent<CharacterController>();
+                if (playerController != null)
+                {
+                    float playerHeight = playerController.height;
+                    Vector3 feetPosition = targetPosition - new Vector3(0f, playerHeight / 2f, 0f);
+
+                    RaycastHit hit;
+                    if (Physics.Raycast(feetPosition + Vector3.up * 0.5f, Vector3.down, out hit, 1f, whatIsGround))
+                    {
+                        targetPosition = hit.point;
+                    }
+                    else
+                    {
+                        if (Physics.Raycast(targetPosition + Vector3.up * 2f, Vector3.down, out hit, 3f, whatIsGround))
+                        {
+                            targetPosition = hit.point;
+                        }
+                    }
+                }
+                else
+                {
+                    RaycastHit hit;
+                    if (Physics.Raycast(targetPosition + Vector3.up * 2f, Vector3.down, out hit, 3f, whatIsGround))
+                    {
+                        targetPosition = hit.point;
+                    }
+                }
+
+                // 檢查與已有著彈點的距離
+                positionFound = true;
+                foreach (Vector3 usedPos in usedPositions)
+                {
+                    if (Vector3.Distance(targetPosition, usedPos) < adjustedMinDistance)
+                    {
+                        positionFound = false;
+                        break;
+                    }
+                }
+
+                attempts++;
+            }
+
+            // 如果無法找到不重疊的位置，使用最後一次嘗試的位置（避免無限循環）
+            if (!positionFound)
+            {
+                Debug.LogWarning($"Could not find non-overlapping position for Outer MiniImpactCircle {i + 1} after {maxPlacementAttempts} attempts. Using last position.");
+            }
+
+            // 記錄當前著彈點位置
+            usedPositions.Add(targetPosition);
+
+            // 啟動一個獨立的協程來處理 MiniMissileSwarm VFX 和 MiniImpactCircle
+            StartCoroutine(HandleMiniMissileLaunch(selectedSpawnPoint, targetPosition, beatsToExpand));
+
+            // 等待動態計算的 miniMissileLaunchDelay 後發射下一個小型導彈
+            yield return new WaitForSeconds(currentMiniMissileLaunchDelay);
+
+            // 交替使用左右發射點
+            useRightSpawnPoint = !useRightSpawnPoint;
+        }
+
+        isAttack = false;
+        Invoke("ResetAttack", timeBetweenAttacks + 5);
+    }
+
+
+    private IEnumerator HandleMiniMissileLaunch(Transform spawnPoint, Vector3 targetPosition, int beatsToExpand)
+    {
+        // 播放 MiniMissileSwarm VFX（使用新的 miniMissileVFXPool）
+        GameObject miniMissileVFX = GetMiniMissileLaunchVFXFromPool(spawnPoint);
+        if (miniMissileVFX != null)
+        {
+            yield return new WaitForSeconds(miniMissileVFXDuration); // 等待 VFX 播放完成（3 秒）
+            ReturnMiniMissileSwarmVFXToPool(miniMissileVFX);
+        }
+
+        // 生成 MiniImpactCircle
+        GameObject miniImpactCircle = Instantiate(miniImpactCirclePrefab, targetPosition, Quaternion.identity);
+        ImpactCircle circleScript = miniImpactCircle.GetComponent<ImpactCircle>();
+        if (circleScript != null)
+        {
+            circleScript.SetBeatsToExpand(beatsToExpand);
+            circleScript.SetPosition(targetPosition);
+            circleScript.StartExpanding();
+        }
+    }
+
+    private GameObject GetMiniMissileLaunchVFXFromPool(Transform launchPosition)
+    {
+        GameObject vfx;
+        if (miniMissileVFXPool.Count > 0)
+        {
+            vfx = miniMissileVFXPool.Dequeue();
+            vfx.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning("MiniMissileSwarm VFX pool is empty! Instantiating new VFX.");
+            vfx = Instantiate(miniMissileLaunchVFXPrefab);
+        }
+
+        // 設置位置和旋轉
+        vfx.transform.position = launchPosition.position;
+        vfx.transform.rotation = launchPosition.rotation;
+
+        // 播放 Visual Effect
+        var visualEffect = vfx.GetComponent<VisualEffect>();
+        if (visualEffect != null)
+        {
+            visualEffect.Stop();
+            visualEffect.Reinit();
+            visualEffect.Play();
+        }
+        else
+        {
+            Debug.LogError("VisualEffect component not found on MiniMissileSwarm VFX object!");
+        }
+
+        return vfx;
+    }
+
+
+
+    private void ReturnMiniMissileSwarmVFXToPool(GameObject vfx)
+    {
+        var visualEffect = vfx.GetComponent<VisualEffect>();
+        if (visualEffect != null)
+        {
+            visualEffect.Stop();
+            StartCoroutine(DelayedDeactivationMiniMissileSwarmVFX(vfx, 1f)); // 延遲 1 秒以確保粒子消失
+        }
+        else
+        {
+            DeactivateMiniMissileSwarmVFX(vfx);
+        }
+    }
+
+    private IEnumerator DelayedDeactivationMiniMissileSwarmVFX(GameObject vfx, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        DeactivateMiniMissileSwarmVFX(vfx);
+    }
+
+    private void DeactivateMiniMissileSwarmVFX(GameObject vfx)
+    {
+        vfx.transform.position = Vector3.zero;
+        vfx.transform.rotation = Quaternion.identity;
+        vfx.SetActive(false);
+        miniMissileVFXPool.Enqueue(vfx);
+    }
+
+
+
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+    public GameObject GetMiniExplosionVFXFromPool(Vector3 position)
+    {
+        if (miniExplosionVFXPrefab == null)
+        {
+            Debug.LogError("MiniExplosionVFXPrefab is not set in Boss_Ai!");
+            return null;
+        }
+
+        GameObject vfx;
+        if (miniExplosionVFXPool.Count > 0)
+        {
+            vfx = miniExplosionVFXPool.Dequeue();
+            vfx.SetActive(true);
+            Debug.Log("Reusing MiniExplosionVFX from pool.");
+        }
+        else
+        {
+            Debug.LogWarning("MiniExplosion VFX pool is empty! Instantiating new VFX.");
+            vfx = Instantiate(miniExplosionVFXPrefab);
+        }
+
+        vfx.transform.position = position + new Vector3(0f, 0.35f, 0f);
+        vfx.transform.rotation = Quaternion.identity;
+
+        var visualEffect = vfx.GetComponent<VisualEffect>();
+        if (visualEffect != null)
+        {
+            visualEffect.Stop();
+            visualEffect.Reinit();
+            visualEffect.Play();
+            Debug.Log("MiniExplosionVFX played at position: " + vfx.transform.position);
+        }
+        else
+        {
+            Debug.LogError("VisualEffect component not found on MiniExplosionVFX object!");
+        }
+
+        StartCoroutine(ReturnMiniExplosionVFXAfterDuration(vfx, miniExplosionVFXDuration));
+        return vfx;
+    }
+
+    private IEnumerator ReturnMiniExplosionVFXAfterDuration(GameObject vfx, float duration)
+    {
+        yield return new WaitForSeconds(duration); // 直接設置為 miniExplosionVFXDuration
+        ReturnMiniExplosionVFXToPool(vfx);
+    }
+
+    private void ReturnMiniExplosionVFXToPool(GameObject vfx)
+    {
+        var visualEffect = vfx.GetComponent<VisualEffect>();
+        if (visualEffect != null)
+        {
+            visualEffect.Stop();
+        }
+
+        vfx.transform.position = Vector3.zero;
+        vfx.transform.rotation = Quaternion.identity;
+        vfx.SetActive(false);
+        miniExplosionVFXPool.Enqueue(vfx);
+    }
 
 
     //=================================================================================================================================================================================

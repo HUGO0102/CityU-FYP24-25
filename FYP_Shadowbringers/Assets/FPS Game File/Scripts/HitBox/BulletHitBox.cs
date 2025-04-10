@@ -2,27 +2,54 @@ using UnityEngine;
 
 public class BulletHitBox : MonoBehaviour
 {
-    [SerializeField] private ParticleSystem hitEffect;
+    [SerializeField] private ParticleSystem hitEffect; // 擊中敵人或玩家的效果
+    [SerializeField] private ParticleSystem shieldHitEffect; // 擊中護盾的效果
 
     private void OnTriggerEnter(Collider other)
     {
-        if (gameObject.tag == "PlayerBullets" && other.gameObject.tag == "Enemy")
+        // 玩家子彈擊中敵人或護盾
+        if (gameObject.tag == "PlayerBullets")
         {
-            if (hitEffect != null)
+            if (other.gameObject.tag == "Enemy")
             {
-                ParticleSystem effect = Instantiate(hitEffect, transform.position, Quaternion.identity);
-                Destroy(effect.gameObject, effect.main.duration);
+                if (hitEffect != null)
+                {
+                    ParticleSystem effect = Instantiate(hitEffect, transform.position, Quaternion.identity);
+                    Destroy(effect.gameObject, effect.main.duration);
+                }
+                ReturnToPool();
             }
-            ReturnToPool();
+            else if (other.gameObject.tag == "Shield")
+            {
+                if (shieldHitEffect != null)
+                {
+                    ParticleSystem effect = Instantiate(shieldHitEffect, transform.position, Quaternion.identity);
+                    Destroy(effect.gameObject, effect.main.duration);
+                }
+                ReturnToPool();
+            }
         }
-        else if (gameObject.tag == "EnemyBullets" && (other.gameObject.tag == "Player" || other.gameObject.tag == "Untagged"))
+        // 敵人子彈擊中玩家、未標記對象或護盾
+        else if (gameObject.tag == "EnemyBullets")
         {
-            if (hitEffect != null)
+            if (other.gameObject.tag == "Player" || other.gameObject.tag == "Untagged")
             {
-                ParticleSystem effect = Instantiate(hitEffect, transform.position, Quaternion.identity);
-                Destroy(effect.gameObject, effect.main.duration);
+                if (hitEffect != null)
+                {
+                    ParticleSystem effect = Instantiate(hitEffect, transform.position, Quaternion.identity);
+                    Destroy(effect.gameObject, effect.main.duration);
+                }
+                ReturnToPool();
             }
-            ReturnToPool();
+            else if (other.gameObject.tag == "Shield")
+            {
+                if (shieldHitEffect != null)
+                {
+                    ParticleSystem effect = Instantiate(shieldHitEffect, transform.position, Quaternion.identity);
+                    Destroy(effect.gameObject, effect.main.duration);
+                }
+                ReturnToPool();
+            }
         }
     }
 

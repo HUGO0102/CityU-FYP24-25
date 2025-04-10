@@ -218,5 +218,5 @@ MonoBehaviour:
   maxScale: 10
   beatsToExpand: 2
   damage: 10
-  startColor: {r: 1, g: 0, b: 0, a: 0.3}
+  startColor: {r: 1, g: 0, b: 0, a: 0.101960786}
   endColor: {r: 1, g: 0, b: 0, a: 1}
