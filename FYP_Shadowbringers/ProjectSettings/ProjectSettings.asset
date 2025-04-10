@@ -777,7 +777,7 @@ PlayerSettings:
   webGLThreadsSupport: 0
   webGLDecompressionFallback: 0
   scriptingDefineSymbols:
-    Android: DOTWEEN
+    Android: DOTWEEN;CROSS_PLATFORM_INPUT;MOBILE_INPUT
     EmbeddedLinux: DOTWEEN
     GameCoreScarlett: DOTWEEN
     GameCoreXboxOne: DOTWEEN
@@ -787,11 +787,11 @@ PlayerSettings:
     PS4: DOTWEEN
     PS5: DOTWEEN
     Stadia: DOTWEEN
-    Standalone: DOTWEEN
+    Standalone: DOTWEEN;CROSS_PLATFORM_INPUT
     WebGL: DOTWEEN
     Windows Store Apps: DOTWEEN
     XboxOne: DOTWEEN
-    iPhone: DOTWEEN
+    iPhone: DOTWEEN;CROSS_PLATFORM_INPUT;MOBILE_INPUT
     tvOS: DOTWEEN
   additionalCompilerArguments: {}
   platformArchitecture: {}

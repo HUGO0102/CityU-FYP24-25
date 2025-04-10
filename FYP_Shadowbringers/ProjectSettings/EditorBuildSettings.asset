@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Scene0-Menu.unity
     guid: 8262c6df02b137d4ea5785f00170f960
   - enabled: 1
+    path: Assets/Scenes/Scene1-Laboratory.unity
+    guid: 5ecbc0f61ed8e9049beaccd7972d8ab9
+  - enabled: 1
     path: Assets/Scenes/Scene1-Destroyed_City.unity
     guid: 59b4a0bee18037d499f67b65e36df635
   m_configObjects:
