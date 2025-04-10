@@ -9,6 +9,7 @@ public class MenuManager : MonoBehaviour
 {
     [Header("Menu Manager")]
     [SerializeField] Animator transitionAnim;
+    public GameObject BlackScreen;
     public string MainGame;
     
     public void NextLevel()
@@ -17,6 +18,7 @@ public class MenuManager : MonoBehaviour
     }
     IEnumerator LoadScene()
     {
+        gameObject.SetActive(true);
         transitionAnim.SetTrigger("End");
         yield return new WaitForSeconds(1);
         SceneManager.LoadScene(MainGame);
