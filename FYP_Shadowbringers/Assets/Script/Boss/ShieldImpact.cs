@@ -9,16 +9,21 @@ public class ShieldImpact : MonoBehaviour
 
     private VisualEffect shieldRipplesVFX;
 
-    private void OnTriggerEnter(Collider other)
+    private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("Trigger with: " + other.gameObject.tag); // 調試用，檢查標籤
-        if (other.gameObject.tag == "PlayerBullets")
+        Debug.Log("Collision with: " + collision.gameObject.tag); // 調試用，檢查標籤
+        if (collision.gameObject.tag == "PlayerBullets")
         {
             var ripples = Instantiate(shieldRipples, transform) as GameObject;
             shieldRipplesVFX = ripples.GetComponent<VisualEffect>();
-            // 因為 OnTriggerEnter 沒有 contacts 點，需要手動計算碰撞點
-            Vector3 closestPoint = GetComponent<Collider>().ClosestPoint(other.transform.position);
-            shieldRipplesVFX.SetVector3("SphereCenter", closestPoint);
+
+            // 直接從 Collision 對象獲取碰撞點（世界坐標）
+            Vector3 closestPoint = collision.contacts[0].point;
+            // 將世界坐標轉換為本地坐標（相對於 shieldRipples 對象）
+            Vector3 localPoint = ripples.transform.InverseTransformPoint(closestPoint);
+            Debug.Log("World Point: " + closestPoint + ", Local Point: " + localPoint); // 調試用
+            shieldRipplesVFX.SetVector3("SphereCenter", localPoint);
+
             Destroy(ripples, 2);
         }
     }

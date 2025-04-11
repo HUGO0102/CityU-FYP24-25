@@ -5,12 +5,12 @@ public class BulletHitBox : MonoBehaviour
     [SerializeField] private ParticleSystem hitEffect; // 擊中敵人或玩家的效果
     [SerializeField] private ParticleSystem shieldHitEffect; // 擊中護盾的效果
 
-    private void OnTriggerEnter(Collider other)
+    private void OnCollisionEnter(Collision collision)
     {
         // 玩家子彈擊中敵人或護盾
         if (gameObject.tag == "PlayerBullets")
         {
-            if (other.gameObject.tag == "Enemy")
+            if (collision.gameObject.tag == "Enemy")
             {
                 if (hitEffect != null)
                 {
@@ -19,11 +19,13 @@ public class BulletHitBox : MonoBehaviour
                 }
                 ReturnToPool();
             }
-            else if (other.gameObject.tag == "Shield")
+            else if (collision.gameObject.tag == "Shield")
             {
                 if (shieldHitEffect != null)
                 {
-                    ParticleSystem effect = Instantiate(shieldHitEffect, transform.position, Quaternion.identity);
+                    // 使用碰撞點作為粒子效果的位置
+                    Vector3 contactPoint = collision.contacts[0].point;
+                    ParticleSystem effect = Instantiate(shieldHitEffect, contactPoint, Quaternion.identity);
                     Destroy(effect.gameObject, effect.main.duration);
                 }
                 ReturnToPool();
@@ -32,7 +34,7 @@ public class BulletHitBox : MonoBehaviour
         // 敵人子彈擊中玩家、未標記對象或護盾
         else if (gameObject.tag == "EnemyBullets")
         {
-            if (other.gameObject.tag == "Player" || other.gameObject.tag == "Untagged")
+            if (collision.gameObject.tag == "Player" || collision.gameObject.tag == "Untagged")
             {
                 if (hitEffect != null)
                 {
@@ -41,11 +43,13 @@ public class BulletHitBox : MonoBehaviour
                 }
                 ReturnToPool();
             }
-            else if (other.gameObject.tag == "Shield")
+            else if (collision.gameObject.tag == "Shield")
             {
                 if (shieldHitEffect != null)
                 {
-                    ParticleSystem effect = Instantiate(shieldHitEffect, transform.position, Quaternion.identity);
+                    // 使用碰撞點作為粒子效果的位置
+                    Vector3 contactPoint = collision.contacts[0].point;
+                    ParticleSystem effect = Instantiate(shieldHitEffect, contactPoint, Quaternion.identity);
                     Destroy(effect.gameObject, effect.main.duration);
                 }
                 ReturnToPool();

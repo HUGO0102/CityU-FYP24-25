@@ -163,6 +163,16 @@ public class Boss_Ai : MonoBehaviour
     //===================================================================================================================================================================================================
 
 
+    [Header("Shield Settings")]
+    [SerializeField] private GameObject shieldObject; // 指向 Shield 對象（Unity_Boss > Shield）
+    [SerializeField] private float shieldDuration = 5f; // 護盾持續時間（5 秒）
+    private bool isShieldActive = false; // 護盾是否激活
+
+
+
+    //===================================================================================================================================================================================================
+
+
     // SFX
     [Header("SoundFX")]
     public AudioSource enemyAudioSource;
@@ -185,6 +195,12 @@ public class Boss_Ai : MonoBehaviour
 
         if (targetLooker == null)
             targetLooker = GetComponentInChildren<TargetLooker>();
+
+        if (shieldObject != null)
+        {
+            shieldObject.SetActive(false);
+            isShieldActive = false;
+        }
     }
 
     private void Start()
@@ -393,6 +409,42 @@ public class Boss_Ai : MonoBehaviour
 
 
     //=================================================================================================================================================================================
+
+
+
+    private void ActivateShield()
+    {
+        if (shieldObject != null && !isShieldActive)
+        {
+            // 啟用護盾對象
+            shieldObject.SetActive(true);
+            isShieldActive = true;
+            Debug.Log("Shield activated!");
+
+            // 啟動協程，在 5 秒後禁用護盾
+            StartCoroutine(DeactivateShieldAfterDuration(shieldDuration));
+        }
+    }
+
+    private IEnumerator DeactivateShieldAfterDuration(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+
+        // 禁用護盾對象
+        if (shieldObject != null)
+        {
+            shieldObject.SetActive(false);
+            isShieldActive = false;
+            Debug.Log("Shield deactivated!");
+        }
+    }
+
+
+
+    //=================================================================================================================================================================================
+
+
+
 
 
 
@@ -834,6 +886,7 @@ public class Boss_Ai : MonoBehaviour
     {
         isAttack = true;
         int beats = lowHealth ? missileBeatsToExpand/2+1 : missileBeatsToExpand+1;
+        ActivateShield(); // 激活護盾
         StartCoroutine(LaunchMissiles(beats)); // 傳遞 beatsToExpand
     }
 
@@ -1087,6 +1140,7 @@ public class Boss_Ai : MonoBehaviour
     {
         isAttack = true;
         int beats = lowHealth ? miniMissileBeatsToExpand / 2 + 1 : miniMissileBeatsToExpand + 1;
+        ActivateShield(); // 激活護盾
         StartCoroutine(LaunchMiniMissileSwarm(beats));
     }
 
@@ -1474,6 +1528,12 @@ public class Boss_Ai : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
+        if (isShieldActive)
+        {
+            return; // 護盾激活時，忽略傷害
+        }
+
+
         hited = true;
 
         // SFX

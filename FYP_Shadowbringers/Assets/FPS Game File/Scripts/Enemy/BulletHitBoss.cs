@@ -6,12 +6,12 @@ public class BulletHitBoss : MonoBehaviour
 {
     public Boss_Ai EnemyHealth;
 
-    void OnTriggerEnter(Collider other)
+    private void OnCollisionEnter(Collision collision)
     {
-        if (other.gameObject.tag == "PlayerBullets")
+        if (collision.gameObject.tag == "PlayerBullets")
         {
             EnemyHealth.TakeDamage(20);
-            Debug.Log("Hit");
+            Debug.Log("Hit Boss with Player Bullet");
         }
     }
 }

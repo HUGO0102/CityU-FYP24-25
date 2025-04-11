@@ -6,9 +6,9 @@ public class BulletHitEmeleeEnemy : MonoBehaviour
 {
     public MeleeAi EnemyHealth;
 
-    void OnTriggerEnter(Collider other)
+    private void OnCollisionEnter(Collision collision)
     {
-        if (other.gameObject.tag == "PlayerBullets")
+        if (collision.gameObject.tag == "PlayerBullets")
         {
             EnemyHealth.TakeDamage(20);
             Debug.Log("Hit");
