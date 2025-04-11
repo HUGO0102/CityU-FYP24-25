@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UIElements;
 using UnityEngine.VFX;
 
 public class Boss_Ai : MonoBehaviour
@@ -165,8 +166,15 @@ public class Boss_Ai : MonoBehaviour
 
     [Header("Shield Settings")]
     [SerializeField] private GameObject shieldObject; // 指向 Shield 對象（Unity_Boss > Shield）
-    [SerializeField] private float shieldDuration = 5f; // 護盾持續時間（5 秒）
+    [SerializeField] private float normalShieldDuration = 5f; // 正常狀態下的護盾持續時間（5 秒）
+    [SerializeField] private float lowHealthShieldDuration = 8f; // 低血量狀態下的護盾持續時間（8 秒）
+    [SerializeField] private float shieldCooldown = 10f; // 護盾冷卻時間（10 秒）
+    [SerializeField] private float lowHealthShieldCooldown = 5f; // 護盾冷卻時間（10 秒）
+    private VisualEffect shieldVFX; // 護盾的 Visual Effect 組件（ShieldShaderVFX）
+    private VisualEffect shieldFailVFX; // 護盾失敗的 Visual Effect 組件（ShieldShaderFailVFX）
     private bool isShieldActive = false; // 護盾是否激活
+    private bool isShieldOnCooldown = false; // 護盾是否在冷卻中
+    private Coroutine shieldDeactivationCoroutine; // 護盾禁用協程
 
 
 
@@ -198,8 +206,33 @@ public class Boss_Ai : MonoBehaviour
 
         if (shieldObject != null)
         {
-            shieldObject.SetActive(false);
+            // 獲取 ShieldShaderVFX 的 VisualEffect 組件
+            shieldVFX = shieldObject.transform.Find("ShieldShaderVFX")?.GetComponent<VisualEffect>();
+            if (shieldVFX == null)
+            {
+                Debug.LogError("ShieldShaderVFX does not have a VisualEffect component or was not found!");
+            }
+            else
+            {
+                shieldVFX.gameObject.SetActive(false); // 確保護盾 VFX 初始時是禁用的
+            }
+
+            // 獲取 ShieldShaderFailVFX 的 VisualEffect 組件
+            shieldFailVFX = shieldObject.transform.Find("ShieldShaderFailVFX")?.GetComponent<VisualEffect>();
+            if (shieldFailVFX == null)
+            {
+                Debug.LogError("ShieldShaderFailVFX does not have a VisualEffect component or was not found!");
+            }
+            else
+            {
+                shieldFailVFX.gameObject.SetActive(false); // 確保護盾失敗 VFX 初始時是禁用的
+            }
+
             isShieldActive = false;
+        }
+        else
+        {
+            Debug.LogError("Shield object is not assigned in Boss_Ai!");
         }
     }
 
@@ -414,15 +447,50 @@ public class Boss_Ai : MonoBehaviour
 
     private void ActivateShield()
     {
-        if (shieldObject != null && !isShieldActive)
+        if (shieldVFX != null && !isShieldActive && !isShieldOnCooldown)
         {
-            // 啟用護盾對象
-            shieldObject.SetActive(true);
-            isShieldActive = true;
-            Debug.Log("Shield activated!");
+            // 根據 lowHealth 狀態選擇護盾持續時間
+            float duration = lowHealth ? lowHealthShieldDuration : normalShieldDuration;
 
-            // 啟動協程，在 5 秒後禁用護盾
-            StartCoroutine(DeactivateShieldAfterDuration(shieldDuration));
+            // 啟用 ShieldShaderVFX 對象（而不是整個 Shield 父對象）
+            shieldVFX.gameObject.SetActive(true);
+            isShieldActive = true;
+
+            // 設置 ShieldShaderVFX 的 Shield LifeTime
+            if (shieldVFX.HasFloat("Shield LifeTime"))
+            {
+                shieldVFX.SetFloat("Shield LifeTime", duration);
+                shieldVFX.Reinit();
+                shieldVFX.Play();
+            }
+            else
+            {
+                Debug.LogWarning("Shield LifeTime parameter not found in ShieldShaderVFX!");
+            }
+
+            Debug.Log($"Shield activated for {duration} seconds (Low Health: {lowHealth})!");
+
+            // 啟動協程，在指定時間後禁用護盾
+            if (shieldDeactivationCoroutine != null)
+            {
+                StopCoroutine(shieldDeactivationCoroutine);
+            }
+            shieldDeactivationCoroutine = StartCoroutine(DeactivateShieldAfterDuration(duration));
+        }
+        else if (isShieldOnCooldown)
+        {
+            Debug.Log("Shield is on cooldown, activation failed! Playing ShieldShaderFailVFX.");
+
+            // 播放 ShieldShaderFailVFX
+            if (shieldFailVFX != null)
+            {
+                shieldFailVFX.gameObject.SetActive(true);
+                shieldFailVFX.Reinit();
+                shieldFailVFX.Play();
+
+                // 啟動協程，在 VFX 播放完成後禁用 ShieldShaderFailVFX
+                StartCoroutine(DeactivateFailVFXAfterDuration(shieldFailVFX));
+            }
         }
     }
 
@@ -430,12 +498,39 @@ public class Boss_Ai : MonoBehaviour
     {
         yield return new WaitForSeconds(duration);
 
-        // 禁用護盾對象
-        if (shieldObject != null)
+        // 禁用 ShieldShaderVFX 對象（而不是整個 Shield 父對象）
+        if (shieldVFX != null)
         {
-            shieldObject.SetActive(false);
+            shieldVFX.gameObject.SetActive(false);
             isShieldActive = false;
             Debug.Log("Shield deactivated!");
+
+            // 啟動冷卻計時
+            StartCoroutine(ShieldCooldown());
+        }
+    }
+
+    private IEnumerator ShieldCooldown()
+    {
+        isShieldOnCooldown = true;
+        float duration = lowHealth ? lowHealthShieldCooldown : shieldCooldown;
+        yield return new WaitForSeconds(duration);
+        isShieldOnCooldown = false;
+        Debug.Log("Shield cooldown finished, ready to activate again!");
+    }
+
+
+    private IEnumerator DeactivateFailVFXAfterDuration(VisualEffect failVFX)
+    {
+        // 假設 ShieldShaderFailVFX 的播放時長為 2 秒
+        float failVFXDuration = 2f;
+        yield return new WaitForSeconds(failVFXDuration);
+
+        // 禁用 ShieldShaderFailVFX
+        if (failVFX != null)
+        {
+            failVFX.gameObject.SetActive(false);
+            Debug.Log("ShieldShaderFailVFX deactivated!");
         }
     }
 
@@ -1491,7 +1586,7 @@ public class Boss_Ai : MonoBehaviour
             visualEffect.Stop();
             visualEffect.Reinit();
             visualEffect.Play();
-            Debug.Log("MiniExplosionVFX played at position: " + vfx.transform.position);
+            //Debug.Log("MiniExplosionVFX played at position: " + vfx.transform.position);
         }
         else
         {

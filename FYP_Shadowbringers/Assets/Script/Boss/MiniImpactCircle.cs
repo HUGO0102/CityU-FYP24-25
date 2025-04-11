@@ -7,7 +7,7 @@ public class MiniImpactCircle : ImpactCircle
         Boss_Ai boss = FindObjectOfType<Boss_Ai>();
         if (boss != null)
         {
-            Debug.Log("Spawning MiniExplosionVFX at position: " + transform.position);
+            //Debug.Log("Spawning MiniExplosionVFX at position: " + transform.position);
             boss.GetMiniExplosionVFXFromPool(transform.position);
         }
         else
@@ -35,7 +35,7 @@ public class MiniImpactCircle : ImpactCircle
                 if (playerHealth != null)
                 {
                     playerHealth.TakeDamage(damage);
-                    Debug.Log($"Player hit by mini explosion! Position: {hit.transform.position}, Explosion Center: {transform.position}, Explosion Radius: {explosionRadius}");
+                    //Debug.Log($"Player hit by mini explosion! Position: {hit.transform.position}, Explosion Center: {transform.position}, Explosion Radius: {explosionRadius}");
                 }
                 else
                 {
