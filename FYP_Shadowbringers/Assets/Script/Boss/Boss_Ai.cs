@@ -49,7 +49,6 @@ public class Boss_Ai : MonoBehaviour
     // VFX
     [Header("OnHit VFX")]
     [SerializeField] public ParticleSystem spark;
-    [SerializeField] public ParticleSystem onHitVFX;
 
 
     //===================================================================================================================================================================================================
@@ -1639,14 +1638,6 @@ public class Boss_Ai : MonoBehaviour
 
         if (animator != null)
         {
-            // VFX
-            if (!vfxIsCreated)
-            {
-                if (onHitVFX != null)
-                {
-                    Instantiate(onHitVFX, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), transform.rotation);
-                }
-            }
 
             animator.SetTrigger("isHited");
         }
