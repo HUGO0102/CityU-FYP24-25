@@ -10,7 +10,7 @@ public class TargetLooker : MonoBehaviour
     {
         if (targetTrans == null)
         {
-            transform.localPosition = new Vector3(-0.2f, 0, 0.5f);
+            //transform.localPosition = new Vector3(-0.2f, 0, 0.5f);
         }
         else
         {

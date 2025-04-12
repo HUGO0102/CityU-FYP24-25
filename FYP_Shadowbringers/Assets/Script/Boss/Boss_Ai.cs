@@ -49,10 +49,22 @@ public class Boss_Ai : MonoBehaviour
     public bool hited;
     public float sightRange, attackRange;
     public bool playerInSightRange, playerInAttackRange;
+    private bool hasDetectedPlayer = false; // 是否已經發現玩家
+    private bool isBypassingObstacle = false; // 記錄是否正在繞過障礙物
 
     // VFX
     [Header("OnHit VFX")]
     [SerializeField] public ParticleSystem spark;
+
+
+    // Camera Shake Settings
+    [Header("Walking Camera Shake Settings")]
+    [SerializeField] private float shakeDuration = 0.2f; // Duration of the shake
+    [SerializeField] private float maxShakeMagnitude = 0.2f; // 最大震動幅度（當距離很近時）
+    [SerializeField] private float minShakeMagnitude = 0.05f; // 最小震動幅度（當距離很遠時）
+    [SerializeField] private float maxShakeDistance = 25f; // 距離範圍（震動幅度隨距離變化）
+    private Camera mainCamera; // Reference to the main camera
+    private Vector3 originalLocalOffset; // To store the camera's original position
 
 
     //===================================================================================================================================================================================================
@@ -201,6 +213,12 @@ public class Boss_Ai : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
 
+        mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+            Debug.LogError("Main Camera not found! Please ensure there is a Camera tagged as 'MainCamera' in the scene.");
+        }
+
         if (meshRenderer == null)
             meshRenderer = GetComponentInChildren<MeshRenderer>();
 
@@ -312,23 +330,35 @@ public class Boss_Ai : MonoBehaviour
 
             targetPostition = new Vector3(player.position.x, this.transform.position.y, player.position.z);
 
-            if (!playerInSightRange && !playerInAttackRange)
+            if (playerInSightRange)
+            {
+                hasDetectedPlayer = true;
+            }
+
+            // 如果已經發現玩家，持續追蹤或攻擊
+            if (hasDetectedPlayer)
+            {
+                // 如果玩家在攻擊範圍內，執行攻擊
+                if (playerInAttackRange)
+                {
+                    isIdle = true;
+                    isWalking = false;
+                    AttackPlayer();
+                }
+                // 否則追蹤玩家（即使玩家不在視野範圍內）
+                else
+                {
+                    isIdle = false;
+                    isWalking = true;
+                    ChasePlayer();
+                }
+            }
+            // 如果尚未發現玩家，保持 Idle 狀態
+            else
             {
                 isIdle = true;
                 isWalking = false;
                 Idleing();
-            }
-            if (playerInSightRange && !playerInAttackRange)
-            {
-                isIdle = false;
-                isWalking = true;
-                ChasePlayer();
-            }
-            if (playerInAttackRange && playerInSightRange)
-            {
-                isIdle = true;
-                isWalking = false;
-                AttackPlayer();
             }
         }
     }
@@ -354,6 +384,7 @@ public class Boss_Ai : MonoBehaviour
         if (targetLooker != null)
             TargetLooker.GetComponent<TargetLooker>().targetTrans = null;
 
+        agent.isStopped = false; // 確保移動未被停止
         agent.SetDestination(transform.position);
 
         // Calculates DistanceToWalkPoint
@@ -378,26 +409,92 @@ public class Boss_Ai : MonoBehaviour
             walkPointSet = true;
     }
 
+
+
+    //========================================================================================================================================================================================================
+
+
     private void ChasePlayer()
     {
         if (isDead) return;
 
-        agent.speed = 5f;
+        agent.speed = 4f; // 追蹤速度
+        agent.isStopped = false;
 
         if (targetLooker != null)
             TargetLooker.GetComponent<TargetLooker>().targetTrans = player;
 
+        // 設置目標為玩家位置
         agent.SetDestination(player.position);
+
+        // 檢查是否被障礙物阻擋
+        if (!CanSeePlayer())
+        {
+            // 如果看不到玩家，嘗試繞過障礙物
+            StartCoroutine(TryBypassObstacle());
+        }
     }
+
+    private bool CanSeePlayer()
+    {
+        RaycastHit hit;
+        Vector3 directionToPlayer = (player.position - transform.position).normalized;
+        // 從 Boss 位置向玩家發射射線，檢查是否有障礙物
+        if (Physics.Raycast(transform.position + Vector3.up * 1f, directionToPlayer, out hit, sightRange, whatIsGround))
+        {
+            // 如果射線擊中了非玩家的物體，則被阻擋
+            if (hit.collider.gameObject != player.gameObject)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // 嘗試繞過障礙物
+    private IEnumerator TryBypassObstacle()
+    {
+        // 如果已經在繞過障礙物，則不重複執行
+        if (isBypassingObstacle) yield break;
+
+        isBypassingObstacle = true;
+
+        // 隨機選擇一個附近的可行走點
+        Vector3 randomPoint = transform.position + Random.insideUnitSphere * 5f;
+        randomPoint.y = transform.position.y; // 保持在同一高度
+
+        NavMeshHit navHit;
+        if (NavMesh.SamplePosition(randomPoint, out navHit, 5f, NavMesh.AllAreas))
+        {
+            // 移動到隨機點
+            agent.SetDestination(navHit.position);
+            yield return new WaitForSeconds(2f); // 等待 2 秒，給予移動時間
+        }
+
+        // 重新設置目標為玩家
+        agent.SetDestination(player.position);
+        isBypassingObstacle = false;
+    }
+
+    
+
+
+    //========================================================================================================================================================================================================
+
 
     private void AttackPlayer()
     {
         if (isDead) return;
 
-        agent.speed = 2f;
+        // 停止移動並設置速度為 0
+        agent.speed = 0f;
+        agent.isStopped = true; // 停止 NavMeshAgent 的移動
 
         if (targetLooker != null)
             TargetLooker.GetComponent<TargetLooker>().targetTrans = player;
+
+        // 確保 Boss 不移動
+        agent.SetDestination(transform.position);
 
         // 使槍口朝向玩家
         rBarrelLocation.LookAt(player.position);
@@ -859,6 +956,10 @@ public class Boss_Ai : MonoBehaviour
     private void ResetAttack()
     {
         alreadyAttacked = false;
+
+        // 恢復移動
+        agent.isStopped = false; // 重新啟用 NavMeshAgent 的移動
+        agent.speed = 2f; // 恢復正常的移動速度（與 Idle 狀態一致）
     }
 
 
@@ -1626,6 +1727,71 @@ public class Boss_Ai : MonoBehaviour
 
 
     //=================================================================================================================================================================================
+
+
+    // Function to be called by Animation Event
+    public void ShakeCamera()
+    {
+        if (isWalking && mainCamera != null)
+        {
+            // 計算 Boss 與玩家的距離
+            float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+
+            // 根據距離計算震動幅度（線性插值）
+            float shakeMagnitude = Mathf.Lerp(minShakeMagnitude, maxShakeMagnitude, 1f - (distanceToPlayer / maxShakeDistance));
+            shakeMagnitude = Mathf.Clamp(shakeMagnitude, minShakeMagnitude, maxShakeMagnitude);
+
+            StartCoroutine(ShakeCameraCoroutine(shakeMagnitude));
+        }
+    }
+
+    private IEnumerator ShakeCameraCoroutine(float shakeMagnitude)
+    {
+        // 如果相機有父對象，記錄相對於父對象的本地偏移
+        if (mainCamera.transform.parent != null)
+        {
+            originalLocalOffset = mainCamera.transform.localPosition;
+        }
+        else
+        {
+            originalLocalOffset = Vector3.zero;
+        }
+
+        float elapsedTime = 0f;
+
+        // 震動相機
+        while (elapsedTime < shakeDuration)
+        {
+            // 生成隨機偏移
+            Vector3 randomOffset = Random.insideUnitSphere * shakeMagnitude;
+            randomOffset.z = 0f; // 保持 Z 軸不變
+
+            // 如果有父對象，應用本地偏移；否則應用絕對偏移
+            if (mainCamera.transform.parent != null)
+            {
+                mainCamera.transform.localPosition = originalLocalOffset + randomOffset;
+            }
+            else
+            {
+                mainCamera.transform.position = mainCamera.transform.position + randomOffset;
+            }
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // 震動結束後，將相機位置重置
+        if (mainCamera.transform.parent != null)
+        {
+            mainCamera.transform.localPosition = originalLocalOffset;
+        }
+    }
+
+
+
+    //=================================================================================================================================================================================
+
+
 
 
     public void TakeDamage(int damage)
