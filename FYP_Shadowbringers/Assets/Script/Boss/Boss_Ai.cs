@@ -20,6 +20,10 @@ public class Boss_Ai : MonoBehaviour
     bool isAttack;
     bool isHit;
     bool dead;
+    bool isMissileAttack;
+    bool isR_Shooting;
+    bool isL_Shooting;
+    bool isBothShooting;
 
     public GameObject DestroyObj;
 
@@ -335,6 +339,10 @@ public class Boss_Ai : MonoBehaviour
         animator.SetBool("Walking", isWalking);
         animator.SetBool("Attack", isAttack);
         animator.SetBool("Hit", isHit);
+        animator.SetBool("isMissileAttack", isMissileAttack);
+        animator.SetBool("isR_Shooting", isR_Shooting);
+        animator.SetBool("isL_Shooting", isL_Shooting);
+        animator.SetBool("isBothShooting", isBothShooting);
     }
 
     private void Idleing()
@@ -417,13 +425,11 @@ public class Boss_Ai : MonoBehaviour
                     print("Missile Attack");
                     break;
                 case 2:
-                    MiniMissileSwarmAttack();
-                    //GunAttackBoth(); // 同時使用左右槍口
+                    GunAttackBoth(); // 同時使用左右槍口
                     print("Both Guns Attack");
                     break;
                 case 1:
-                    MiniMissileSwarmAttack();
-                    //GunAttackRight(); // 僅使用右槍口
+                    GunAttackRight(); // 僅使用右槍口
                     print("Right Gun Attack");
                     break;
                 case 0:
@@ -544,19 +550,19 @@ public class Boss_Ai : MonoBehaviour
 
     private void GunAttackRight()
     {
-        isAttack = true;
+        isR_Shooting = true; // 觸發 R_Shooting 動畫
         StartCoroutine(FireBurst(rBarrelLocation));
     }
 
     private void GunAttackLeft()
     {
-        isAttack = true;
+        isL_Shooting = true; // 觸發 L_Shooting 動畫
         StartCoroutine(FireBurst(lBarrelLocation));
     }
 
     private void GunAttackBoth()
     {
-        isAttack = true;
+        isBothShooting = true; // 觸發 BothShooting 動畫
         StartCoroutine(FireBurstBoth());
     }
 
@@ -657,7 +663,9 @@ public class Boss_Ai : MonoBehaviour
             }
         }
 
-        isAttack = false;
+        // 關閉動畫
+        isR_Shooting = false;
+        isL_Shooting = false;
         Invoke("ResetAttack", timeBetweenAttacks);
     }
 
@@ -844,7 +852,7 @@ public class Boss_Ai : MonoBehaviour
             leftVFXInstance = null;
         }
 
-        isAttack = false;
+        isBothShooting = false;
         Invoke("ResetAttack", timeBetweenAttacks + 2);
     }
 
@@ -978,7 +986,7 @@ public class Boss_Ai : MonoBehaviour
 
     private void MissileAttack()
     {
-        isAttack = true;
+        isMissileAttack = true; // 觸發 MissileAttack 動畫
         int beats = lowHealth ? missileBeatsToExpand/2+1 : missileBeatsToExpand+1;
         ActivateShield(); // 激活護盾
         StartCoroutine(LaunchMissiles(beats)); // 傳遞 beatsToExpand
@@ -986,7 +994,7 @@ public class Boss_Ai : MonoBehaviour
 
     private IEnumerator LaunchMissiles(int beatsToExpand)
     {
-        isAttack = true;
+        isMissileAttack = true; // 觸發 MissileAttack 動畫
 
         for (int i = 0; i < missileCount; i++)
         {
@@ -1028,7 +1036,7 @@ public class Boss_Ai : MonoBehaviour
             yield return new WaitForSeconds(missileLaunchDelay);
         }
 
-        isAttack = false;
+        isMissileAttack = false;
         Invoke("ResetAttack", timeBetweenAttacks + 5);
     }
 
@@ -1232,7 +1240,7 @@ public class Boss_Ai : MonoBehaviour
 
     private void MiniMissileSwarmAttack()
     {
-        isAttack = true;
+        isMissileAttack = true; // 觸發 MissileAttack 動畫
         int beats = lowHealth ? miniMissileBeatsToExpand / 2 + 1 : miniMissileBeatsToExpand + 1;
         ActivateShield(); // 激活護盾
         StartCoroutine(LaunchMiniMissileSwarm(beats));
@@ -1241,7 +1249,7 @@ public class Boss_Ai : MonoBehaviour
 
     private IEnumerator LaunchMiniMissileSwarm(int beatsToExpand)
     {
-        isAttack = true;
+        isMissileAttack = true; // 觸發 MissileAttack 動畫
         bool useRightSpawnPoint = true; // 從右側開始發射
 
         // 用於記錄已生成的著彈點位置
@@ -1458,7 +1466,7 @@ public class Boss_Ai : MonoBehaviour
             useRightSpawnPoint = !useRightSpawnPoint;
         }
 
-        isAttack = false;
+        isMissileAttack = false;
         Invoke("ResetAttack", timeBetweenAttacks + 5);
     }
 
