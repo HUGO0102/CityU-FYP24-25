@@ -23,7 +23,8 @@ public class BeatBar_fadeout : MonoBehaviour
         moveSpeed = 160f / beatDuration;
         if ( !barTouched)
         {
-            this.transform.Translate(moveDirection * moveSpeed * Time.deltaTime);
+            float normalizedSpeed = moveSpeed * (Screen.width / 1920f);
+            this.transform.Translate(moveDirection * normalizedSpeed * Time.deltaTime);
         }
     }
 
