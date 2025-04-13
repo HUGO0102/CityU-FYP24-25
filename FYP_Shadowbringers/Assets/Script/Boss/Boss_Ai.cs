@@ -88,7 +88,7 @@ public class Boss_Ai : MonoBehaviour
     private GameObject rightVFXInstance; // 右邊槍口的 VFX 實例
     private GameObject leftVFXInstance;  // 左邊槍口的 VFX 實例
     private Queue<GameObject> vfxPool = new Queue<GameObject>(); // VFX 對象池
-    [SerializeField] private int vfxPoolSize = 4; // 對象池大小
+    [SerializeField] private int vfxPoolSize = 2; // 對象池大小
 
     // Barrel
     [Header("Location Refrences")]
@@ -338,20 +338,24 @@ public class Boss_Ai : MonoBehaviour
             // 如果已經發現玩家，持續追蹤或攻擊
             if (hasDetectedPlayer)
             {
-                // 如果玩家在攻擊範圍內，執行攻擊
-                if (playerInAttackRange)
+                if (!alreadyAttacked)
                 {
-                    isIdle = true;
-                    isWalking = false;
-                    AttackPlayer();
+                    // 如果玩家在攻擊範圍內，執行攻擊
+                    if (playerInAttackRange)
+                    {
+                        isIdle = true;
+                        isWalking = false;
+                        AttackPlayer();
+                    }
+                    // 否則追蹤玩家（即使玩家不在視野範圍內）
+                    else
+                    {
+                        isIdle = false;
+                        isWalking = true;
+                        ChasePlayer();
+                    }
                 }
-                // 否則追蹤玩家（即使玩家不在視野範圍內）
-                else
-                {
-                    isIdle = false;
-                    isWalking = true;
-                    ChasePlayer();
-                }
+                
             }
             // 如果尚未發現玩家，保持 Idle 狀態
             else
