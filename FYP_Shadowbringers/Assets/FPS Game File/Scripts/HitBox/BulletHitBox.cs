@@ -65,7 +65,7 @@ public class BulletHitBox : MonoBehaviour
 
     private void ReturnToPool()
     {
-        Debug.Log("Bullet Returned to Pool: " + gameObject.tag);
+        //Debug.Log("Bullet Returned to Pool: " + gameObject.tag);
         if (BulletPoolManager.Instance != null)
         {
             if (gameObject.CompareTag("PlayerBullets"))

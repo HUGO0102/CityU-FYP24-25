@@ -11,13 +11,13 @@ public class Hit_Player : MonoBehaviour
         if (other.gameObject.tag == "EnemyBullets")
         {
            Health.TakeDamage(5);
-            Debug.Log("Hit");
+            Debug.Log("Hit Player");
         }
 
         if (other.gameObject.tag == "MeleeEnemy_Attack")
         {
             Health.TakeDamage(5);
-            Debug.Log("Hit");
+            Debug.Log("Hit Player");
         }
     }
 }

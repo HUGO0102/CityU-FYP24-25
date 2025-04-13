@@ -1750,7 +1750,7 @@ public class Boss_Ai : MonoBehaviour
         {
             vfx = miniExplosionVFXPool.Dequeue();
             vfx.SetActive(true);
-            Debug.Log("Reusing MiniExplosionVFX from pool.");
+            //Debug.Log("Reusing MiniExplosionVFX from pool.");
         }
         else
         {
@@ -1936,7 +1936,7 @@ public class Boss_Ai : MonoBehaviour
         enemyAudioSource.volume = Random.Range(footstepVolumeMin, footstepVolumeMax);
         enemyAudioSource.pitch = Random.Range(footstepPitchMin, footstepPitchMax);
         enemyAudioSource.PlayOneShot(leftFootstepSound);
-        Debug.Log("Left footstep sound played.");
+        //Debug.Log("Left footstep sound played.");
     }
 
     // 播放右腳腳步聲（由 Animation Event 觸發）
@@ -1948,7 +1948,7 @@ public class Boss_Ai : MonoBehaviour
         enemyAudioSource.volume = Random.Range(footstepVolumeMin, footstepVolumeMax);
         enemyAudioSource.pitch = Random.Range(footstepPitchMin, footstepPitchMax);
         enemyAudioSource.PlayOneShot(rightFootstepSound);
-        Debug.Log("Right footstep sound played.");
+        //Debug.Log("Right footstep sound played.");
     }
 
 

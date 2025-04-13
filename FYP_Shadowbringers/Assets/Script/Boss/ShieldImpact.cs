@@ -10,7 +10,7 @@ public class ShieldImpact : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("Collision with: " + collision.gameObject.tag);
+        //Debug.Log("Collision with: " + collision.gameObject.tag);
         if (collision.gameObject.tag == "PlayerBullets")
         {
             var ripples = Instantiate(shieldRipples, transform) as GameObject;

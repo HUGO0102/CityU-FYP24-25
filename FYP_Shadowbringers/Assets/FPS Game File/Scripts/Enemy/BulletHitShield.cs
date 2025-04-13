@@ -25,7 +25,7 @@ public class BulletHitShield : MonoBehaviour
             if (boss != null && boss.IsShieldActive())
             {
                 boss.TakeShieldDamage(bulletDamage);
-                Debug.Log("Damaged Shield");
+                //Debug.Log("Damaged Shield");
             }
         }
     }
