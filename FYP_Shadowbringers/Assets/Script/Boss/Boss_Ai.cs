@@ -202,6 +202,12 @@ public class Boss_Ai : MonoBehaviour
     private float volumeChangeMultiplier = 0.2f;
     private float pitchChangeMultiplier = 0.2f;
 
+    [SerializeField] private AudioClip leftFootstepSound;  // 左腳腳步聲音效
+    [SerializeField] private AudioClip rightFootstepSound; // 右腳腳步聲音效
+    [SerializeField] private float footstepVolumeMin = 0.8f; // 腳步聲音量最小值
+    [SerializeField] private float footstepVolumeMax = 1.0f; // 腳步聲音量最大值
+    [SerializeField] private float footstepPitchMin = 0.9f;  // 腳步聲音高最小值
+    [SerializeField] private float footstepPitchMax = 1.1f;  // 腳步聲音高最大值
 
     //===================================================================================================================================================================================================
 
@@ -1918,6 +1924,34 @@ public class Boss_Ai : MonoBehaviour
     {
         Destroy(DestroyObj);
     }
+
+
+
+    // 播放左腳腳步聲（由 Animation Event 觸發）
+    public void PlayLeftFootstepSound()
+    {
+        if (isDead || enemyAudioSource == null || leftFootstepSound == null) return;
+
+        // 隨機化音量和音高
+        enemyAudioSource.volume = Random.Range(footstepVolumeMin, footstepVolumeMax);
+        enemyAudioSource.pitch = Random.Range(footstepPitchMin, footstepPitchMax);
+        enemyAudioSource.PlayOneShot(leftFootstepSound);
+        Debug.Log("Left footstep sound played.");
+    }
+
+    // 播放右腳腳步聲（由 Animation Event 觸發）
+    public void PlayRightFootstepSound()
+    {
+        if (isDead || enemyAudioSource == null || rightFootstepSound == null) return;
+
+        // 隨機化音量和音高
+        enemyAudioSource.volume = Random.Range(footstepVolumeMin, footstepVolumeMax);
+        enemyAudioSource.pitch = Random.Range(footstepPitchMin, footstepPitchMax);
+        enemyAudioSource.PlayOneShot(rightFootstepSound);
+        Debug.Log("Right footstep sound played.");
+    }
+
+
 
     //=================================================================================================================================================================================
 

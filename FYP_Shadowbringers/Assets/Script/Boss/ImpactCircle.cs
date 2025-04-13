@@ -82,7 +82,7 @@ public class ImpactCircle : MonoBehaviour
                 BeatManager.Instance._CheckBeat();
 
                 currentBeatCount++;
-                Debug.Log($"Beat {currentBeatCount}/{beatsToExpand}, Scale: {currentScale}");
+                //Debug.Log($"Beat {currentBeatCount}/{beatsToExpand}, Scale: {currentScale}");
                 float t = (float)currentBeatCount / beatsToExpand;
                 currentScale = Mathf.Lerp(initialScale, maxScale, t);
                 innerCircle.localScale = new Vector3(currentScale, innerCircle.localScale.y, currentScale);
@@ -91,7 +91,7 @@ public class ImpactCircle : MonoBehaviour
 
                 if (currentScale >= outerCircleScale)
                 {
-                    Debug.Log("ImpactCircle reached max scale, triggering Explode!");
+                    //Debug.Log("ImpactCircle reached max scale, triggering Explode!");
                     Explode();
                     StartCoroutine(DelayedDestroy(0.1f));
                 }
@@ -130,7 +130,7 @@ public class ImpactCircle : MonoBehaviour
         Boss_Ai boss = FindObjectOfType<Boss_Ai>();
         if (boss != null)
         {
-            Debug.Log("Spawning ExplosionVFX at position: " + transform.position);
+            //Debug.Log("Spawning ExplosionVFX at position: " + transform.position);
             boss.GetExplosionVFXFromPool(transform.position);
         }
         else
@@ -158,7 +158,7 @@ public class ImpactCircle : MonoBehaviour
                 if (playerHealth != null)
                 {
                     playerHealth.TakeDamage(damage);
-                    Debug.Log($"Player hit by explosion! Position: {hit.transform.position}, Explosion Center: {transform.position}, Explosion Radius: {explosionRadius}");
+                    //Debug.Log($"Player hit by explosion! Position: {hit.transform.position}, Explosion Center: {transform.position}, Explosion Radius: {explosionRadius}");
                 }
                 else
                 {

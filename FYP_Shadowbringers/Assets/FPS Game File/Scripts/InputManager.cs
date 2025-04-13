@@ -25,9 +25,10 @@ public class InputManager : MonoBehaviour
 
         onFoot.Jump.performed += ctx => motor.Jump();
         onFoot.Crouch.performed += ctx => motor.Crouch();
-        onFoot.Sprint.performed += ctx => motor.Sprint();
+        onFoot.Sprint.performed += ctx => motor.Sprint(true);  // 按下 Left Shift 時觸發
+        onFoot.Sprint.canceled += ctx => motor.Sprint(false); // 放開 Left Shift 時觸發
 
-      
+
     }
 
     private void Update()
@@ -58,6 +59,11 @@ public class InputManager : MonoBehaviour
     {
         onFoot.Disable();
         onHand.Disable();
+
+        onFoot.Jump.performed -= ctx => motor.Jump();
+        onFoot.Crouch.performed -= ctx => motor.Crouch();
+        onFoot.Sprint.performed -= ctx => motor.Sprint(true);
+        onFoot.Sprint.canceled -= ctx => motor.Sprint(false);
     }
 
 
