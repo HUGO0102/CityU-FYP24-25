@@ -20,7 +20,7 @@ public class BeatBar_fadeout : MonoBehaviour
     }
     private void Update()
     {
-        moveSpeed = 160f / beatDuration;
+        moveSpeed = 320f / beatDuration;
         if ( !barTouched)
         {
             float normalizedSpeed = moveSpeed * (Screen.width / 1920f);
