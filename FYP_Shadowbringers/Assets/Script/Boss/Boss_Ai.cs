@@ -180,13 +180,13 @@ public class Boss_Ai : MonoBehaviour
 
 
     [Header("Shield Settings")]
-    [SerializeField] private GameObject shieldObject; // 指向 Shield 對象（Unity_Boss > Shield）
+    [SerializeField] private GameObject shieldObject; // 指向 Shield 對象
     [SerializeField] private float normalShieldDuration = 5f; // 正常狀態下的護盾持續時間（5 秒）
     [SerializeField] private float lowHealthShieldDuration = 8f; // 低血量狀態下的護盾持續時間（8 秒）
     [SerializeField] private float shieldCooldown = 10f; // 護盾冷卻時間（10 秒）
-    [SerializeField] private float lowHealthShieldCooldown = 5f; // 護盾冷卻時間（10 秒）
-    private VisualEffect shieldVFX; // 護盾的 Visual Effect 組件（ShieldShaderVFX）
-    private VisualEffect shieldFailVFX; // 護盾失敗的 Visual Effect 組件（ShieldShaderFailVFX）
+    [SerializeField] private float lowHealthShieldCooldown = 5f; // 低血量時護盾冷卻時間（5 秒）
+    [SerializeField] private int maxShieldHealth = 100; // 護盾最大血量
+    private int shieldHealth; // 當前護盾血量
     private bool isShieldActive = false; // 護盾是否激活
     private bool isShieldOnCooldown = false; // 護盾是否在冷卻中
     private Coroutine shieldDeactivationCoroutine; // 護盾禁用協程
@@ -225,33 +225,7 @@ public class Boss_Ai : MonoBehaviour
         if (targetLooker == null)
             targetLooker = GetComponentInChildren<TargetLooker>();
 
-        if (shieldObject != null)
-        {
-            // 獲取 ShieldShaderVFX 的 VisualEffect 組件
-            shieldVFX = shieldObject.transform.Find("ShieldShaderVFX")?.GetComponent<VisualEffect>();
-            if (shieldVFX == null)
-            {
-                Debug.LogError("ShieldShaderVFX does not have a VisualEffect component or was not found!");
-            }
-            else
-            {
-                shieldVFX.gameObject.SetActive(false); // 確保護盾 VFX 初始時是禁用的
-            }
-
-            // 獲取 ShieldShaderFailVFX 的 VisualEffect 組件
-            shieldFailVFX = shieldObject.transform.Find("ShieldShaderFailVFX")?.GetComponent<VisualEffect>();
-            if (shieldFailVFX == null)
-            {
-                Debug.LogError("ShieldShaderFailVFX does not have a VisualEffect component or was not found!");
-            }
-            else
-            {
-                shieldFailVFX.gameObject.SetActive(false); // 確保護盾失敗 VFX 初始時是禁用的
-            }
-
-            isShieldActive = false;
-        }
-        else
+        if (shieldObject == null)
         {
             Debug.LogError("Shield object is not assigned in Boss_Ai!");
         }
@@ -553,68 +527,187 @@ public class Boss_Ai : MonoBehaviour
 
     private void ActivateShield()
     {
-        if (shieldVFX != null && !isShieldActive && !isShieldOnCooldown)
+        if (!isShieldActive) // 僅檢查護盾是否已經激活
         {
             // 根據 lowHealth 狀態選擇護盾持續時間
             float duration = lowHealth ? lowHealthShieldDuration : normalShieldDuration;
 
-            // 啟用 ShieldShaderVFX 對象（而不是整個 Shield 父對象）
-            shieldVFX.gameObject.SetActive(true);
-            isShieldActive = true;
+            // 初始化護盾血量
+            shieldHealth = maxShieldHealth;
 
-            // 設置 ShieldShaderVFX 的 Shield LifeTime
-            if (shieldVFX.HasFloat("Shield LifeTime"))
-            {
-                shieldVFX.SetFloat("Shield LifeTime", duration);
-                shieldVFX.Reinit();
-                shieldVFX.Play();
-            }
-            else
-            {
-                Debug.LogWarning("Shield LifeTime parameter not found in ShieldShaderVFX!");
-            }
-
-            Debug.Log($"Shield activated for {duration} seconds (Low Health: {lowHealth})!");
-
-            // 啟動協程，在指定時間後禁用護盾
+            // 啟動協程來處理護盾激活的 VFX 流程
             if (shieldDeactivationCoroutine != null)
             {
                 StopCoroutine(shieldDeactivationCoroutine);
             }
-            shieldDeactivationCoroutine = StartCoroutine(DeactivateShieldAfterDuration(duration));
+            shieldDeactivationCoroutine = StartCoroutine(ActivateShieldSequence(duration));
         }
         else if (isShieldOnCooldown)
         {
-            Debug.Log("Shield is on cooldown, activation failed! Playing ShieldShaderFailVFX.");
+            Debug.Log("Shield is on cooldown, activation failed! Activating ShieldPowerFailVFX.");
 
-            // 播放 ShieldShaderFailVFX
-            if (shieldFailVFX != null)
+            // 激活 ShieldPowerFailVFX
+            Transform failVFXTransform = shieldObject.transform.Find("ShieldPowerFailVFX");
+            if (failVFXTransform != null)
             {
-                shieldFailVFX.gameObject.SetActive(true);
-                shieldFailVFX.Reinit();
-                shieldFailVFX.Play();
-
-                // 啟動協程，在 VFX 播放完成後禁用 ShieldShaderFailVFX
-                StartCoroutine(DeactivateFailVFXAfterDuration(shieldFailVFX));
+                failVFXTransform.gameObject.SetActive(true);
+                StartCoroutine(DeactivateVFXAfterDuration(failVFXTransform.gameObject, 1f)); // 播放 1 秒
+            }
+            else
+            {
+                Debug.LogWarning("ShieldPowerFailVFX not found under Shield object!");
             }
         }
     }
 
-    private IEnumerator DeactivateShieldAfterDuration(float duration)
+
+    private IEnumerator ActivateShieldSequence(float duration)
     {
-        yield return new WaitForSeconds(duration);
-
-        // 禁用 ShieldShaderVFX 對象（而不是整個 Shield 父對象）
-        if (shieldVFX != null)
+        // 激活 ShieldPowerUpVFX
+        Transform powerUpVFXTransform = shieldObject.transform.Find("ShieldPowerUpVFX");
+        if (powerUpVFXTransform != null)
         {
-            shieldVFX.gameObject.SetActive(false);
-            isShieldActive = false;
-            Debug.Log("Shield deactivated!");
+            powerUpVFXTransform.gameObject.SetActive(true);
+            Debug.Log("ShieldPowerUpVFX activated!");
+            yield return new WaitForSeconds(1f); // 等待 1 秒
+            powerUpVFXTransform.gameObject.SetActive(false); // 禁用 ShieldPowerUpVFX
+            Debug.Log("ShieldPowerUpVFX deactivated!");
+        }
+        else
+        {
+            Debug.LogWarning("ShieldPowerUpVFX not found under Shield object!");
+        }
 
-            // 啟動冷卻計時
-            StartCoroutine(ShieldCooldown());
+        // 激活 ShieldStayVFX 並設置 Shield LifeTime
+        Transform stayVFXTransform = shieldObject.transform.Find("ShieldStayVFX");
+        if (stayVFXTransform != null)
+        {
+            VisualEffect stayVFX = stayVFXTransform.GetComponent<VisualEffect>();
+            if (stayVFX != null)
+            {
+                stayVFX.gameObject.SetActive(true);
+                if (stayVFX.HasFloat("Shield LifeTime"))
+                {
+                    stayVFX.SetFloat("Shield LifeTime", duration);
+                    stayVFX.Reinit();
+                    stayVFX.Play();
+                    Debug.Log($"ShieldStayVFX activated with Shield LifeTime: {duration} seconds!");
+                }
+                else
+                {
+                    Debug.LogWarning("Shield LifeTime parameter not found in ShieldStayVFX!");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("ShieldStayVFX does not have a VisualEffect component!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("ShieldStayVFX not found under Shield object!");
+        }
+
+        isShieldActive = true;
+        Debug.Log($"Shield activated for {duration} seconds with {shieldHealth}/{maxShieldHealth} health (Low Health: {lowHealth})!");
+
+        // 等待 ShieldStayVFX 播放完成
+        yield return StartCoroutine(DeactivateShieldAfterDuration(duration));
+    }
+
+
+    public void TakeShieldDamage(int damage)
+    {
+        if (!isShieldActive) return;
+
+        shieldHealth -= damage;
+        Debug.Log($"Shield took {damage} damage! Current shield health: {shieldHealth}/{maxShieldHealth}");
+
+        if (shieldHealth <= 0)
+        {
+            // 護盾血量為 0，提前禁用護盾
+            Debug.Log("Shield broken!");
+            if (shieldDeactivationCoroutine != null)
+            {
+                StopCoroutine(shieldDeactivationCoroutine);
+            }
+            StartCoroutine(DeactivateShieldImmediately());
         }
     }
+
+    public bool IsShieldActive()
+    {
+        return isShieldActive;
+    }
+
+    private IEnumerator DeactivateShieldImmediately()
+    {
+        // 禁用 ShieldStayVFX
+        Transform stayVFXTransform = shieldObject.transform.Find("ShieldStayVFX");
+        if (stayVFXTransform != null)
+        {
+            stayVFXTransform.gameObject.SetActive(false);
+            Debug.Log("ShieldStayVFX deactivated!");
+        }
+
+        // 激活 ShieldBreakVFX
+        Transform breakVFXTransform = shieldObject.transform.Find("ShieldBreakVFX");
+        if (breakVFXTransform != null)
+        {
+            breakVFXTransform.gameObject.SetActive(true);
+            Debug.Log("ShieldBreakVFX activated!");
+            yield return new WaitForSeconds(1f); // 等待 1 秒
+            breakVFXTransform.gameObject.SetActive(false); // 禁用 ShieldBreakVFX
+            Debug.Log("ShieldBreakVFX deactivated!");
+        }
+        else
+        {
+            Debug.LogWarning("ShieldBreakVFX not found under Shield object!");
+        }
+
+        isShieldActive = false;
+        Debug.Log("Shield deactivated due to health reaching 0!");
+
+        // 啟動冷卻計時
+        yield return StartCoroutine(ShieldCooldown());
+    }
+
+    private IEnumerator DeactivateShieldAfterDuration(float duration)
+    {
+        // 等待 ShieldStayVFX 播放完成
+        yield return new WaitForSeconds(duration);
+
+        // 禁用 ShieldStayVFX
+        Transform stayVFXTransform = shieldObject.transform.Find("ShieldStayVFX");
+        if (stayVFXTransform != null)
+        {
+            stayVFXTransform.gameObject.SetActive(false);
+            Debug.Log("ShieldStayVFX deactivated!");
+        }
+
+        // 檢查 shieldHealth 是否大於 0，如果是則播放 ShieldBreakVFX
+        if (shieldHealth > 0)
+        {
+            Transform breakVFXTransform = shieldObject.transform.Find("ShieldBreakVFX");
+            if (breakVFXTransform != null)
+            {
+                breakVFXTransform.gameObject.SetActive(true);
+                Debug.Log("ShieldBreakVFX activated due to ShieldStayVFX timeout!");
+                yield return new WaitForSeconds(1f); // 等待 1 秒
+                breakVFXTransform.gameObject.SetActive(false);
+                Debug.Log("ShieldBreakVFX deactivated!");
+            }
+            else
+            {
+                Debug.LogWarning("ShieldBreakVFX not found under Shield object!");
+            }
+        }
+
+        isShieldActive = false;
+        Debug.Log("Shield deactivated!");
+    }
+
+
 
     private IEnumerator ShieldCooldown()
     {
@@ -626,17 +719,14 @@ public class Boss_Ai : MonoBehaviour
     }
 
 
-    private IEnumerator DeactivateFailVFXAfterDuration(VisualEffect failVFX)
+    private IEnumerator DeactivateVFXAfterDuration(GameObject vfxObject, float duration)
     {
-        // 假設 ShieldShaderFailVFX 的播放時長為 2 秒
-        float failVFXDuration = 2f;
-        yield return new WaitForSeconds(failVFXDuration);
+        yield return new WaitForSeconds(duration);
 
-        // 禁用 ShieldShaderFailVFX
-        if (failVFX != null)
+        if (vfxObject != null)
         {
-            failVFX.gameObject.SetActive(false);
-            Debug.Log("ShieldShaderFailVFX deactivated!");
+            vfxObject.SetActive(false);
+            Debug.Log($"{vfxObject.name} deactivated!");
         }
     }
 
@@ -651,18 +741,21 @@ public class Boss_Ai : MonoBehaviour
 
     private void GunAttackRight()
     {
+        ActivateShield(); // 啟用護盾
         isR_Shooting = true; // 觸發 R_Shooting 動畫
         StartCoroutine(FireBurst(rBarrelLocation));
     }
 
     private void GunAttackLeft()
     {
+        ActivateShield(); // 啟用護盾
         isL_Shooting = true; // 觸發 L_Shooting 動畫
         StartCoroutine(FireBurst(lBarrelLocation));
     }
 
     private void GunAttackBoth()
     {
+        ActivateShield(); // 啟用護盾
         isBothShooting = true; // 觸發 BothShooting 動畫
         StartCoroutine(FireBurstBoth());
     }
