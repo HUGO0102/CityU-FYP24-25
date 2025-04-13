@@ -18,7 +18,7 @@ public class ShieldImpact : MonoBehaviour
 
             Vector3 closestPoint = collision.contacts[0].point;
             Vector3 localPoint = ripples.transform.InverseTransformPoint(closestPoint);
-            Debug.Log("World Point: " + closestPoint + ", Local Point: " + localPoint);
+            //Debug.Log("World Point: " + closestPoint + ", Local Point: " + localPoint);
             shieldRipplesVFX.SetVector3("SphereCenter", localPoint);
 
             Destroy(ripples, 2);
