@@ -24,6 +24,7 @@ public class Boss_Ai : MonoBehaviour
     bool isR_Shooting;
     bool isL_Shooting;
     bool isBothShooting;
+    bool isFall;
 
     public GameObject DestroyObj;
 
@@ -183,12 +184,25 @@ public class Boss_Ai : MonoBehaviour
     [SerializeField] private GameObject shieldObject; // 指向 Shield 對象
     [SerializeField] private float shieldCooldown = 20f; // 護盾冷卻時間（10 秒）
     [SerializeField] private float lowHealthShieldCooldown = 10f; // 低血量時護盾冷卻時間（5 秒）
-    [SerializeField] private int maxShieldHealth = 100; // 護盾最大血量
+    [SerializeField] private int defaultShieldHealth = 100; // 非低血量時的護盾血量
+    [SerializeField] private int lowHealthShieldHealth = 200; // 低血量時的護盾血量
+    [SerializeField] private int maxShieldHealth = 100; // 護盾最大血量（初始值）
     private int shieldHealth; // 當前護盾血量
     private bool isShieldActive = false; // 護盾是否激活
     private bool isShieldOnCooldown = false; // 護盾是否在冷卻中
     private Coroutine shieldDeactivationCoroutine; // 護盾禁用協程
 
+
+    [Header("RepairMode Settings")]
+    private bool isInRepairMode = false; // 是否處於維修模式
+    private Coroutine repairCoroutine; // 血量回復協程
+    private const int repairShieldHealth = 500; // 維修模式下的護盾血量
+    private const float repairHealthPerSecond = 10f; // 每秒回復的血量
+    private bool hasTriggeredRepairModeAtTwoThirds = false; // 記錄是否在 2/3 血量觸發過維修模式
+    private bool hasTriggeredRepairModeAtOneThird = false; // 記錄是否在 1/3 血量觸發過維修模式
+    private bool pendingRepairMode = false; // 標記是否需要進入 Repair Mode
+
+    [SerializeField] private GameObject repairVFXPrefab; // 維修 VFX 預製體（普通的 GameObject）
 
 
     //===================================================================================================================================================================================================
@@ -208,6 +222,9 @@ public class Boss_Ai : MonoBehaviour
     [SerializeField] private float footstepVolumeMax = 1.0f; // 腳步聲音量最大值
     [SerializeField] private float footstepPitchMin = 0.9f;  // 腳步聲音高最小值
     [SerializeField] private float footstepPitchMax = 1.1f;  // 腳步聲音高最大值
+
+    [SerializeField] private AudioClip[] repairAudioClips;
+
 
     //===================================================================================================================================================================================================
 
@@ -237,7 +254,9 @@ public class Boss_Ai : MonoBehaviour
 
     private void Start()
     {
+
         maxHealth = health;
+        maxShieldHealth = defaultShieldHealth;
 
         // 初始化 Muzzle Flash VFX 對象池
         for (int i = 0; i < vfxPoolSize; i++)
@@ -298,7 +317,34 @@ public class Boss_Ai : MonoBehaviour
             minigun_Fire_Gap = 0.1f;
         }
 
-        if (!isDead)
+        // 檢查血量並設置 pendingRepairMode 標誌
+        if (!isDead && !isInRepairMode)
+        {
+            float healthFraction = (float)health / maxHealth;
+            // 檢查 2/3 血量閾值
+            if (!hasTriggeredRepairModeAtTwoThirds && healthFraction <= 2f / 3f && healthFraction > 1f / 3f)
+            {
+                pendingRepairMode = true;
+                hasTriggeredRepairModeAtTwoThirds = true;
+                Debug.Log("Triggered Repair Mode at 2/3 health!");
+            }
+            // 檢查 1/3 血量閾值
+            else if (!hasTriggeredRepairModeAtOneThird && healthFraction <= 1f / 3f)
+            {
+                pendingRepairMode = true;
+                hasTriggeredRepairModeAtOneThird = true;
+                Debug.Log("Triggered Repair Mode at 1/3 health!");
+            }
+
+            // 如果有 pendingRepairMode 且不在攻擊中，進入 Repair Mode
+            if (pendingRepairMode && !alreadyAttacked)
+            {
+                StartRepairMode();
+                pendingRepairMode = false; // 重置標誌
+            }
+        }
+
+        if (!isDead && !isInRepairMode) // 確保維修模式下不執行以下邏輯
         {
             // Check if Player in sightrange
             playerInSightRange = Physics.CheckSphere(transform.position, sightRange, whatIsPlayer);
@@ -333,7 +379,6 @@ public class Boss_Ai : MonoBehaviour
                         ChasePlayer();
                     }
                 }
-                
             }
             // 如果尚未發現玩家，保持 Idle 狀態
             else
@@ -355,6 +400,7 @@ public class Boss_Ai : MonoBehaviour
         animator.SetBool("isR_Shooting", isR_Shooting);
         animator.SetBool("isL_Shooting", isL_Shooting);
         animator.SetBool("isBothShooting", isBothShooting);
+        animator.SetBool("isFall", isFall);
     }
 
     private void Idleing()
@@ -458,7 +504,7 @@ public class Boss_Ai : MonoBehaviour
         isBypassingObstacle = false;
     }
 
-    
+
 
 
     //========================================================================================================================================================================================================
@@ -466,7 +512,7 @@ public class Boss_Ai : MonoBehaviour
 
     private void AttackPlayer()
     {
-        if (isDead) return;
+        if (isDead || isInRepairMode) return; // 維修模式下不執行攻擊
 
         // 停止移動並設置速度為 0
         agent.speed = 0f;
@@ -529,10 +575,20 @@ public class Boss_Ai : MonoBehaviour
 
 
 
-    private void ActivateShield()
+    private void ActivateShield(bool forceActivation = false)
     {
-        if (!isShieldActive && !isShieldOnCooldown) // 檢查護盾是否未激活且不在冷卻中
+        if (!isShieldActive && (!isShieldOnCooldown || forceActivation)) // 如果 forceActivation 為 true，忽略冷卻
         {
+            // 動態設置 maxShieldHealth
+            if (isInRepairMode)
+            {
+                maxShieldHealth = repairShieldHealth; // Repair Mode 時護盾血量為 500
+            }
+            else
+            {
+                maxShieldHealth = lowHealth ? lowHealthShieldHealth : defaultShieldHealth; // 非 Repair Mode 時根據 lowHealth 設置
+            }
+
             // 初始化護盾血量
             shieldHealth = maxShieldHealth;
 
@@ -543,7 +599,7 @@ public class Boss_Ai : MonoBehaviour
             }
             shieldDeactivationCoroutine = StartCoroutine(ActivateShieldSequence());
         }
-        else if (isShieldOnCooldown)
+        else if (isShieldOnCooldown && !forceActivation)
         {
             //Debug.Log("Shield is on cooldown, activation failed! Activating ShieldPowerFailVFX.");
 
@@ -567,6 +623,7 @@ public class Boss_Ai : MonoBehaviour
             }
         }
     }
+
 
 
     private IEnumerator ActivateShieldSequence()
@@ -651,7 +708,7 @@ public class Boss_Ai : MonoBehaviour
         if (stayVFXTransform != null)
         {
             stayVFXTransform.gameObject.SetActive(false);
-            //Debug.Log("ShieldStayVFX deactivated!");
+            Debug.Log("ShieldStayVFX deactivated!");
         }
 
         // 激活 ShieldBreakVFX
@@ -664,11 +721,11 @@ public class Boss_Ai : MonoBehaviour
                 breakVFXTransform.gameObject.SetActive(true);
                 breakVFX.Reinit(); // 重新初始化
                 breakVFX.Play();
-                //Debug.Log("ShieldBreakVFX activated and reinitialized!");
+                Debug.Log("ShieldBreakVFX activated and reinitialized!");
             }
             yield return new WaitForSeconds(1f);
             breakVFXTransform.gameObject.SetActive(false);
-            //Debug.Log("ShieldBreakVFX deactivated!");
+            Debug.Log("ShieldBreakVFX deactivated!");
         }
         else
         {
@@ -676,13 +733,19 @@ public class Boss_Ai : MonoBehaviour
         }
 
         isShieldActive = false;
-        //Debug.Log("Shield deactivated due to health reaching 0!");
+        Debug.Log("Shield deactivated due to health reaching 0!");
+
+        yield return new WaitForSeconds(2f);
+
+        // 如果處於維修模式，退出維修模式
+        if (isInRepairMode)
+        {
+            ExitRepairMode();
+        }
 
         // 啟動冷卻計時
         yield return StartCoroutine(ShieldCooldown());
     }
-
-
 
 
     private IEnumerator ShieldCooldown()
@@ -959,10 +1022,11 @@ public class Boss_Ai : MonoBehaviour
             StartCoroutine(FadeInLight(leftLights, lightFadeDuration));
         }
 
-        currentFire_Density = currentFire_Density * 2;
+        // 修改射擊次數為原本的 3 倍
+        int totalFireCount = currentFire_Density * 2; // 將射擊次數設為 3 倍
 
         // 開始交替射擊
-        while (i <= currentFire_Density)
+        while (i < totalFireCount)
         {
             Transform selectedBarrel = useRightBarrel ? rBarrelLocation : lBarrelLocation;
             Light[] selectedLights = useRightBarrel ? rightLights : leftLights;
@@ -982,7 +1046,6 @@ public class Boss_Ai : MonoBehaviour
             yield return new WaitForSeconds(minigun_Fire_Gap);
         }
 
-
         // 直接停止射擊音效，不淡出
         if (rightGunAudioSource != null)
         {
@@ -998,7 +1061,6 @@ public class Boss_Ai : MonoBehaviour
         // 停止旋轉並播放 Wind Down Sound
         rightBarrelSpinner.StopSpinning();
         leftBarrelSpinner.StopSpinning();
-
 
         // 淡出 PointLight
         if (rightLights != null)
@@ -1033,6 +1095,13 @@ public class Boss_Ai : MonoBehaviour
         // 恢復移動
         agent.isStopped = false; // 重新啟用 NavMeshAgent 的移動
         agent.speed = 2f; // 恢復正常的移動速度（與 Idle 狀態一致）
+
+        // 檢查是否需要進入 Repair Mode
+        if (pendingRepairMode)
+        {
+            StartRepairMode();
+            pendingRepairMode = false; // 重置標誌
+        }
     }
 
 
@@ -1797,6 +1866,170 @@ public class Boss_Ai : MonoBehaviour
         vfx.SetActive(false);
         miniExplosionVFXPool.Enqueue(vfx);
     }
+
+
+    //=================================================================================================================================================================================
+
+
+
+    private void StartRepairMode()
+    {
+        if (isDead || isInRepairMode) return;
+
+        isInRepairMode = true;
+        isFall = true; // 觸發 Fall 動畫
+        isIdle = false;
+        isWalking = false;
+        isAttack = false; // 停止攻擊動畫
+        isR_Shooting = false; // 停止右槍攻擊動畫
+        isL_Shooting = false; // 停止左槍攻擊動畫
+        isBothShooting = false; // 停止雙槍攻擊動畫
+        isMissileAttack = false; // 停止導彈攻擊動畫
+        alreadyAttacked = false; // 重置攻擊狀態
+        agent.isStopped = true; // 停止移動
+
+        // 停止槍口旋轉和音效
+        if (rightBarrelSpinner != null) rightBarrelSpinner.StopSpinning();
+        if (leftBarrelSpinner != null) leftBarrelSpinner.StopSpinning();
+        if (rightGunAudioSource != null) rightGunAudioSource.Stop();
+        if (leftGunAudioSource != null) leftGunAudioSource.Stop();
+
+        // 停止槍口光效
+        if (rightBarrelLight != null) rightBarrelLight.SetActive(false);
+        if (leftBarrelLight != null) leftBarrelLight.SetActive(false);
+
+        // 停止 VFX
+        if (rightVFXInstance != null)
+        {
+            ReturnVFXToPool(rightVFXInstance);
+            rightVFXInstance = null;
+        }
+        if (leftVFXInstance != null)
+        {
+            ReturnVFXToPool(leftVFXInstance);
+            leftVFXInstance = null;
+        }
+
+        // 啟動維修音效輪流播放
+        if (enemyAudioSource != null && repairAudioClips != null && repairAudioClips.Length >= 2)
+        {
+            repairAudioCoroutine = StartCoroutine(PlayRepairAudioLoop());
+            Debug.Log("Started repair audio loop.");
+        }
+        else
+        {
+            Debug.LogWarning("Repair audio clips are not properly set or audio source is missing!");
+        }
+
+        // 生成並啟用維修 VFX
+        if (repairVFXPrefab != null)
+        {
+            repairVFXPrefab.SetActive(true); 
+        }
+        else
+        {
+            Debug.LogWarning("Repair VFX prefab is not assigned!");
+        }
+
+        // 強制激活護盾（無視冷卻時間）
+        ActivateShield(true); // 傳入 true 來強制激活護盾，maxShieldHealth 會在 ActivateShield 中設置
+
+        // 開始回復血量
+        repairCoroutine = StartCoroutine(RepairHealth());
+        Debug.Log("Boss entered Repair Mode: Shield activated, health repair started, Fall animation triggered, all attacks stopped.");
+    }
+
+
+
+
+    private IEnumerator RepairHealth()
+    {
+        while (isInRepairMode)
+        {
+            if (!lowHealth)
+            {
+                health += (int)repairHealthPerSecond; // 每秒回復 10 點血量
+            }
+            else
+            {
+                health += (int)repairHealthPerSecond * 2;
+            }
+            
+            health = Mathf.Clamp(health, 0, maxHealth); // 確保血量不超過最大值
+            Debug.Log($"Boss health repaired: {health}/{maxHealth}");
+            yield return new WaitForSecondsRealtime(1f); // 使用 WaitForSecondsRealtime
+        }
+    }
+
+
+
+    private void ExitRepairMode()
+    {
+        isInRepairMode = false;
+        isFall = false; // 停止 Fall 動畫
+        agent.isStopped = false; // 恢復移動
+        if (repairCoroutine != null)
+        {
+            StopCoroutine(repairCoroutine); // 停止血量回復
+            repairCoroutine = null;
+        }
+        alreadyAttacked = false; // 確保可以立即開始攻擊
+
+        // 停止維修音效
+        if (enemyAudioSource != null)
+        {
+            enemyAudioSource.Stop();
+            if (repairAudioCoroutine != null)
+            {
+                StopCoroutine(repairAudioCoroutine);
+                repairAudioCoroutine = null;
+            }
+            Debug.Log("Repair audio loop stopped.");
+        }
+
+
+        repairVFXPrefab.SetActive(false);
+        // 禁用並銷毀維修 VFX
+        
+
+        // 恢復 maxShieldHealth 為非 Repair Mode 的值
+        maxShieldHealth = lowHealth ? lowHealthShieldHealth : defaultShieldHealth;
+        Debug.Log($"Boss exited Repair Mode: Shield broken, health repair stopped, maxShieldHealth reset to {maxShieldHealth}, normal behavior resumed.");
+    }
+
+
+
+
+    private Coroutine repairAudioCoroutine; // 用於控制音效輪流播放的協程
+
+    private IEnumerator PlayRepairAudioLoop()
+    {
+        if (repairAudioClips == null || repairAudioClips.Length < 2 || enemyAudioSource == null)
+        {
+            Debug.LogWarning("Repair audio clips are not properly set or audio source is missing!");
+            yield break;
+        }
+
+        int currentClipIndex = 0; // 當前播放的音效索引
+        while (isInRepairMode)
+        {
+            // 播放當前音效
+            enemyAudioSource.clip = repairAudioClips[currentClipIndex];
+            enemyAudioSource.Play();
+
+            // 等待音效播放完成
+            yield return new WaitForSecondsRealtime(repairAudioClips[currentClipIndex].length);
+
+            // 切換到下一個音效（0 和 1 之間循環）
+            currentClipIndex = (currentClipIndex + 1) % 2;
+        }
+    }
+
+
+
+
+
+
 
 
     //=================================================================================================================================================================================
