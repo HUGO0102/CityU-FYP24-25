@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Animations.Rigging;
 using UnityEngine.UIElements;
 using UnityEngine.VFX;
 
@@ -203,6 +204,11 @@ public class Boss_Ai : MonoBehaviour
     private bool pendingRepairMode = false; // 標記是否需要進入 Repair Mode
 
     [SerializeField] private GameObject repairVFXPrefab; // 維修 VFX 預製體（普通的 GameObject）
+
+    [Header("Animation Rigging")]
+    [SerializeField] private Rig headRig; // 引用 Head_Rig
+    [SerializeField] private Rig handRig; // 引用 Hand_Rig
+    [SerializeField] private float rigWeightTransitionDuration = 1f; // 權重過渡的持續時間（秒）
 
 
     //===================================================================================================================================================================================================
@@ -1109,7 +1115,6 @@ public class Boss_Ai : MonoBehaviour
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
     private GameObject GetVFXFromPool(Transform barrel, bool isRightBarrel)
     {
         //Debug.Log("Getting VFX from pool. Pool count: " + vfxPool.Count);
@@ -1179,8 +1184,6 @@ public class Boss_Ai : MonoBehaviour
 
 
 
-
-
     private void ReturnVFXToPool(GameObject vfx)
     {
         //Debug.Log("Returning VFX to pool.");
@@ -1198,8 +1201,6 @@ public class Boss_Ai : MonoBehaviour
             DeactivateVFX(vfx);
         }
     }
-
-
 
 
     private IEnumerator DelayedDeactivation(GameObject vfx, float delay)
@@ -1284,7 +1285,6 @@ public class Boss_Ai : MonoBehaviour
     }
 
 
-
     private IEnumerator HandleMissileLaunch(Vector3 targetPosition, int beatsToExpand)
     {
         // 播放 MissileLaunchVFX
@@ -1339,10 +1339,7 @@ public class Boss_Ai : MonoBehaviour
 
 
 
-
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 
     private GameObject GetMissileVFXFromPool(Transform launchPosition)
@@ -1378,8 +1375,6 @@ public class Boss_Ai : MonoBehaviour
 
         return vfx;
     }
-
-
 
 
     private void ReturnMissileVFXToPool(GameObject vfx)
@@ -1770,7 +1765,6 @@ public class Boss_Ai : MonoBehaviour
     }
 
 
-
     private void ReturnMiniMissileSwarmVFXToPool(GameObject vfx)
     {
         var visualEffect = vfx.GetComponent<VisualEffect>();
@@ -1924,7 +1918,7 @@ public class Boss_Ai : MonoBehaviour
         // 生成並啟用維修 VFX
         if (repairVFXPrefab != null)
         {
-            repairVFXPrefab.SetActive(true); 
+            repairVFXPrefab.SetActive(true);
         }
         else
         {
@@ -1936,10 +1930,28 @@ public class Boss_Ai : MonoBehaviour
 
         // 開始回復血量
         repairCoroutine = StartCoroutine(RepairHealth());
-        Debug.Log("Boss entered Repair Mode: Shield activated, health repair started, Fall animation triggered, all attacks stopped.");
+
+        // 平滑調整 Head_Rig 和 Hand_Rig 的權重到 0
+        if (headRig != null)
+        {
+            StartCoroutine(SmoothRigWeightTransition(headRig, 0f, rigWeightTransitionDuration));
+        }
+        else
+        {
+            Debug.LogWarning("Head_Rig is not assigned!");
+        }
+
+        if (handRig != null)
+        {
+            StartCoroutine(SmoothRigWeightTransition(handRig, 0f, rigWeightTransitionDuration));
+        }
+        else
+        {
+            Debug.LogWarning("Hand_Rig is not assigned!");
+        }
+
+        Debug.Log("Boss entered Repair Mode: Shield activated, health repair started, Fall animation triggered, all attacks stopped, rigs transitioning to weight 0.");
     }
-
-
 
 
     private IEnumerator RepairHealth()
@@ -1960,7 +1972,6 @@ public class Boss_Ai : MonoBehaviour
             yield return new WaitForSecondsRealtime(1f); // 使用 WaitForSecondsRealtime
         }
     }
-
 
 
     private void ExitRepairMode()
@@ -1987,16 +1998,32 @@ public class Boss_Ai : MonoBehaviour
             Debug.Log("Repair audio loop stopped.");
         }
 
-
         repairVFXPrefab.SetActive(false);
-        // 禁用並銷毀維修 VFX
-        
 
         // 恢復 maxShieldHealth 為非 Repair Mode 的值
         maxShieldHealth = lowHealth ? lowHealthShieldHealth : defaultShieldHealth;
-        Debug.Log($"Boss exited Repair Mode: Shield broken, health repair stopped, maxShieldHealth reset to {maxShieldHealth}, normal behavior resumed.");
-    }
 
+        // 平滑調整 Head_Rig 和 Hand_Rig 的權重到 1
+        if (headRig != null)
+        {
+            StartCoroutine(SmoothRigWeightTransition(headRig, 1f, rigWeightTransitionDuration));
+        }
+        else
+        {
+            Debug.LogWarning("Head_Rig is not assigned!");
+        }
+
+        if (handRig != null)
+        {
+            StartCoroutine(SmoothRigWeightTransition(handRig, 1f, rigWeightTransitionDuration));
+        }
+        else
+        {
+            Debug.LogWarning("Hand_Rig is not assigned!");
+        }
+
+        Debug.Log($"Boss exited Repair Mode: Shield broken, health repair stopped, maxShieldHealth reset to {maxShieldHealth}, rigs transitioning to weight 1, normal behavior resumed.");
+    }
 
 
 
@@ -2026,7 +2053,22 @@ public class Boss_Ai : MonoBehaviour
     }
 
 
+    private IEnumerator SmoothRigWeightTransition(Rig rig, float targetWeight, float duration)
+    {
+        float startWeight = rig.weight;
+        float elapsedTime = 0f;
 
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+            float t = elapsedTime / duration;
+            rig.weight = Mathf.Lerp(startWeight, targetWeight, t);
+            yield return null;
+        }
+
+        rig.weight = targetWeight; // 確保最終值精確
+        Debug.Log($"{rig.name} weight transitioned to {targetWeight}");
+    }
 
 
 
@@ -2159,8 +2201,6 @@ public class Boss_Ai : MonoBehaviour
     }
 
 
-
-    // 播放左腳腳步聲（由 Animation Event 觸發）
     public void PlayLeftFootstepSound()
     {
         if (isDead || enemyAudioSource == null || leftFootstepSound == null) return;
@@ -2172,7 +2212,6 @@ public class Boss_Ai : MonoBehaviour
         //Debug.Log("Left footstep sound played.");
     }
 
-    // 播放右腳腳步聲（由 Animation Event 觸發）
     public void PlayRightFootstepSound()
     {
         if (isDead || enemyAudioSource == null || rightFootstepSound == null) return;

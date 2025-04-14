@@ -11074,6 +11074,9 @@ MonoBehaviour:
   lowHealthShieldHealth: 200
   maxShieldHealth: 100
   repairVFXPrefab: {fileID: 1409097446}
+  headRig: {fileID: 704732644}
+  handRig: {fileID: 171689963}
+  rigWeightTransitionDuration: 1
   enemyAudioSource: {fileID: 5605547426343581828}
   fireSound: {fileID: 8300000, guid: 206304dedf8ef5c41b18a44516a3c9a7, type: 3}
   enemyAudioClip:
