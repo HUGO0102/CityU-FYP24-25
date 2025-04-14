@@ -77,10 +77,10 @@ public class BeatManager : MonoBehaviour
     {
         isCheckingBeat = true;
         inBeat = true;
-        Debug.Log("Beat Start: inBeat = " + inBeat);
+        //Debug.Log("Beat Start: inBeat = " + inBeat);
         yield return new WaitForSeconds(fadeOutBeat);
         inBeat = false;
-        Debug.Log("Beat End: inBeat = " + inBeat);
+        //Debug.Log("Beat End: inBeat = " + inBeat);
         isCheckingBeat = false;
     }
 

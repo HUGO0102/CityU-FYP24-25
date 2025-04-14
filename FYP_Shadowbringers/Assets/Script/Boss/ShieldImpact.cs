@@ -10,7 +10,7 @@ public class ShieldImpact : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("Collision with: " + collision.gameObject.tag);
+        //Debug.Log("Collision with: " + collision.gameObject.tag);
         if (collision.gameObject.tag == "PlayerBullets")
         {
             var ripples = Instantiate(shieldRipples, transform) as GameObject;
@@ -18,7 +18,7 @@ public class ShieldImpact : MonoBehaviour
 
             Vector3 closestPoint = collision.contacts[0].point;
             Vector3 localPoint = ripples.transform.InverseTransformPoint(closestPoint);
-            Debug.Log("World Point: " + closestPoint + ", Local Point: " + localPoint);
+            //Debug.Log("World Point: " + closestPoint + ", Local Point: " + localPoint);
             shieldRipplesVFX.SetVector3("SphereCenter", localPoint);
 
             Destroy(ripples, 2);

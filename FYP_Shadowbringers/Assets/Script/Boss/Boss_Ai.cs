@@ -181,10 +181,8 @@ public class Boss_Ai : MonoBehaviour
 
     [Header("Shield Settings")]
     [SerializeField] private GameObject shieldObject; // 指向 Shield 對象
-    [SerializeField] private float normalShieldDuration = 5f; // 正常狀態下的護盾持續時間（5 秒）
-    [SerializeField] private float lowHealthShieldDuration = 8f; // 低血量狀態下的護盾持續時間（8 秒）
-    [SerializeField] private float shieldCooldown = 10f; // 護盾冷卻時間（10 秒）
-    [SerializeField] private float lowHealthShieldCooldown = 5f; // 低血量時護盾冷卻時間（5 秒）
+    [SerializeField] private float shieldCooldown = 20f; // 護盾冷卻時間（10 秒）
+    [SerializeField] private float lowHealthShieldCooldown = 10f; // 低血量時護盾冷卻時間（5 秒）
     [SerializeField] private int maxShieldHealth = 100; // 護盾最大血量
     private int shieldHealth; // 當前護盾血量
     private bool isShieldActive = false; // 護盾是否激活
@@ -204,6 +202,12 @@ public class Boss_Ai : MonoBehaviour
     private float volumeChangeMultiplier = 0.2f;
     private float pitchChangeMultiplier = 0.2f;
 
+    [SerializeField] private AudioClip leftFootstepSound;  // 左腳腳步聲音效
+    [SerializeField] private AudioClip rightFootstepSound; // 右腳腳步聲音效
+    [SerializeField] private float footstepVolumeMin = 0.8f; // 腳步聲音量最小值
+    [SerializeField] private float footstepVolumeMax = 1.0f; // 腳步聲音量最大值
+    [SerializeField] private float footstepPitchMin = 0.9f;  // 腳步聲音高最小值
+    [SerializeField] private float footstepPitchMax = 1.1f;  // 腳步聲音高最大值
 
     //===================================================================================================================================================================================================
 
@@ -527,11 +531,8 @@ public class Boss_Ai : MonoBehaviour
 
     private void ActivateShield()
     {
-        if (!isShieldActive) // 僅檢查護盾是否已經激活
+        if (!isShieldActive && !isShieldOnCooldown) // 檢查護盾是否未激活且不在冷卻中
         {
-            // 根據 lowHealth 狀態選擇護盾持續時間
-            float duration = lowHealth ? lowHealthShieldDuration : normalShieldDuration;
-
             // 初始化護盾血量
             shieldHealth = maxShieldHealth;
 
@@ -540,17 +541,24 @@ public class Boss_Ai : MonoBehaviour
             {
                 StopCoroutine(shieldDeactivationCoroutine);
             }
-            shieldDeactivationCoroutine = StartCoroutine(ActivateShieldSequence(duration));
+            shieldDeactivationCoroutine = StartCoroutine(ActivateShieldSequence());
         }
         else if (isShieldOnCooldown)
         {
-            Debug.Log("Shield is on cooldown, activation failed! Activating ShieldPowerFailVFX.");
+            //Debug.Log("Shield is on cooldown, activation failed! Activating ShieldPowerFailVFX.");
 
             // 激活 ShieldPowerFailVFX
             Transform failVFXTransform = shieldObject.transform.Find("ShieldPowerFailVFX");
             if (failVFXTransform != null)
             {
-                failVFXTransform.gameObject.SetActive(true);
+                VisualEffect failVFX = failVFXTransform.GetComponent<VisualEffect>();
+                if (failVFX != null)
+                {
+                    failVFXTransform.gameObject.SetActive(true);
+                    failVFX.Reinit(); // 重新初始化
+                    failVFX.Play();
+                    //Debug.Log("ShieldPowerFailVFX activated and reinitialized!");
+                }
                 StartCoroutine(DeactivateVFXAfterDuration(failVFXTransform.gameObject, 1f)); // 播放 1 秒
             }
             else
@@ -561,24 +569,30 @@ public class Boss_Ai : MonoBehaviour
     }
 
 
-    private IEnumerator ActivateShieldSequence(float duration)
+    private IEnumerator ActivateShieldSequence()
     {
         // 激活 ShieldPowerUpVFX
         Transform powerUpVFXTransform = shieldObject.transform.Find("ShieldPowerUpVFX");
         if (powerUpVFXTransform != null)
         {
-            powerUpVFXTransform.gameObject.SetActive(true);
-            Debug.Log("ShieldPowerUpVFX activated!");
-            yield return new WaitForSeconds(1f); // 等待 1 秒
-            powerUpVFXTransform.gameObject.SetActive(false); // 禁用 ShieldPowerUpVFX
-            Debug.Log("ShieldPowerUpVFX deactivated!");
+            VisualEffect powerUpVFX = powerUpVFXTransform.GetComponent<VisualEffect>();
+            if (powerUpVFX != null)
+            {
+                powerUpVFXTransform.gameObject.SetActive(true);
+                powerUpVFX.Reinit(); // 重新初始化
+                powerUpVFX.Play();
+                //Debug.Log("ShieldPowerUpVFX activated and reinitialized!");
+            }
+            yield return new WaitForSeconds(1f);
+            powerUpVFXTransform.gameObject.SetActive(false);
+            //Debug.Log("ShieldPowerUpVFX deactivated!");
         }
         else
         {
             Debug.LogWarning("ShieldPowerUpVFX not found under Shield object!");
         }
 
-        // 激活 ShieldStayVFX 並設置 Shield LifeTime
+        // 激活 ShieldStayVFX（不再設置 Shield LifeTime）
         Transform stayVFXTransform = shieldObject.transform.Find("ShieldStayVFX");
         if (stayVFXTransform != null)
         {
@@ -586,17 +600,9 @@ public class Boss_Ai : MonoBehaviour
             if (stayVFX != null)
             {
                 stayVFX.gameObject.SetActive(true);
-                if (stayVFX.HasFloat("Shield LifeTime"))
-                {
-                    stayVFX.SetFloat("Shield LifeTime", duration);
-                    stayVFX.Reinit();
-                    stayVFX.Play();
-                    Debug.Log($"ShieldStayVFX activated with Shield LifeTime: {duration} seconds!");
-                }
-                else
-                {
-                    Debug.LogWarning("Shield LifeTime parameter not found in ShieldStayVFX!");
-                }
+                stayVFX.Reinit(); // 重新初始化
+                stayVFX.Play();
+                //Debug.Log("ShieldStayVFX activated and will remain active until broken!");
             }
             else
             {
@@ -609,10 +615,8 @@ public class Boss_Ai : MonoBehaviour
         }
 
         isShieldActive = true;
-        Debug.Log($"Shield activated for {duration} seconds with {shieldHealth}/{maxShieldHealth} health (Low Health: {lowHealth})!");
-
-        // 等待 ShieldStayVFX 播放完成
-        yield return StartCoroutine(DeactivateShieldAfterDuration(duration));
+        Debug.Log($"Shield activated with {shieldHealth}/{maxShieldHealth} health (Low Health: {lowHealth})!");
+        // 移除對 DeactivateShieldAfterDuration 的調用，護盾將長駐
     }
 
 
@@ -626,7 +630,7 @@ public class Boss_Ai : MonoBehaviour
         if (shieldHealth <= 0)
         {
             // 護盾血量為 0，提前禁用護盾
-            Debug.Log("Shield broken!");
+            //Debug.Log("Shield broken!");
             if (shieldDeactivationCoroutine != null)
             {
                 StopCoroutine(shieldDeactivationCoroutine);
@@ -647,18 +651,24 @@ public class Boss_Ai : MonoBehaviour
         if (stayVFXTransform != null)
         {
             stayVFXTransform.gameObject.SetActive(false);
-            Debug.Log("ShieldStayVFX deactivated!");
+            //Debug.Log("ShieldStayVFX deactivated!");
         }
 
         // 激活 ShieldBreakVFX
         Transform breakVFXTransform = shieldObject.transform.Find("ShieldBreakVFX");
         if (breakVFXTransform != null)
         {
-            breakVFXTransform.gameObject.SetActive(true);
-            Debug.Log("ShieldBreakVFX activated!");
-            yield return new WaitForSeconds(1f); // 等待 1 秒
-            breakVFXTransform.gameObject.SetActive(false); // 禁用 ShieldBreakVFX
-            Debug.Log("ShieldBreakVFX deactivated!");
+            VisualEffect breakVFX = breakVFXTransform.GetComponent<VisualEffect>();
+            if (breakVFX != null)
+            {
+                breakVFXTransform.gameObject.SetActive(true);
+                breakVFX.Reinit(); // 重新初始化
+                breakVFX.Play();
+                //Debug.Log("ShieldBreakVFX activated and reinitialized!");
+            }
+            yield return new WaitForSeconds(1f);
+            breakVFXTransform.gameObject.SetActive(false);
+            //Debug.Log("ShieldBreakVFX deactivated!");
         }
         else
         {
@@ -666,46 +676,12 @@ public class Boss_Ai : MonoBehaviour
         }
 
         isShieldActive = false;
-        Debug.Log("Shield deactivated due to health reaching 0!");
+        //Debug.Log("Shield deactivated due to health reaching 0!");
 
         // 啟動冷卻計時
         yield return StartCoroutine(ShieldCooldown());
     }
 
-    private IEnumerator DeactivateShieldAfterDuration(float duration)
-    {
-        // 等待 ShieldStayVFX 播放完成
-        yield return new WaitForSeconds(duration);
-
-        // 禁用 ShieldStayVFX
-        Transform stayVFXTransform = shieldObject.transform.Find("ShieldStayVFX");
-        if (stayVFXTransform != null)
-        {
-            stayVFXTransform.gameObject.SetActive(false);
-            Debug.Log("ShieldStayVFX deactivated!");
-        }
-
-        // 檢查 shieldHealth 是否大於 0，如果是則播放 ShieldBreakVFX
-        if (shieldHealth > 0)
-        {
-            Transform breakVFXTransform = shieldObject.transform.Find("ShieldBreakVFX");
-            if (breakVFXTransform != null)
-            {
-                breakVFXTransform.gameObject.SetActive(true);
-                Debug.Log("ShieldBreakVFX activated due to ShieldStayVFX timeout!");
-                yield return new WaitForSeconds(1f); // 等待 1 秒
-                breakVFXTransform.gameObject.SetActive(false);
-                Debug.Log("ShieldBreakVFX deactivated!");
-            }
-            else
-            {
-                Debug.LogWarning("ShieldBreakVFX not found under Shield object!");
-            }
-        }
-
-        isShieldActive = false;
-        Debug.Log("Shield deactivated!");
-    }
 
 
 
@@ -715,7 +691,7 @@ public class Boss_Ai : MonoBehaviour
         float duration = lowHealth ? lowHealthShieldCooldown : shieldCooldown;
         yield return new WaitForSeconds(duration);
         isShieldOnCooldown = false;
-        Debug.Log("Shield cooldown finished, ready to activate again!");
+        //Debug.Log("Shield cooldown finished, ready to activate again!");
     }
 
 
@@ -726,7 +702,7 @@ public class Boss_Ai : MonoBehaviour
         if (vfxObject != null)
         {
             vfxObject.SetActive(false);
-            Debug.Log($"{vfxObject.name} deactivated!");
+            //Debug.Log($"{vfxObject.name} deactivated!");
         }
     }
 
@@ -1380,7 +1356,7 @@ public class Boss_Ai : MonoBehaviour
         {
             vfx = explosionVFXPool.Dequeue();
             vfx.SetActive(true);
-            Debug.Log("Reusing ExplosionVFX from pool.");
+            //Debug.Log("Reusing ExplosionVFX from pool.");
         }
         else
         {
@@ -1398,7 +1374,7 @@ public class Boss_Ai : MonoBehaviour
             visualEffect.Stop();
             visualEffect.Reinit();
             visualEffect.Play();
-            Debug.Log("ExplosionVFX played at position: " + vfx.transform.position);
+            //Debug.Log("ExplosionVFX played at position: " + vfx.transform.position);
         }
         else
         {
@@ -1462,14 +1438,14 @@ public class Boss_Ai : MonoBehaviour
 
         // 動態調整最小間距
         float adjustedMinDistance = Mathf.Min(minDistanceBetweenCircles, randomRadius / Mathf.Sqrt(currentMiniMissileCount));
-        Debug.Log($"Adjusted Min Distance: {adjustedMinDistance} (Original: {minDistanceBetweenCircles}, Random Radius: {randomRadius}, Missile Count: {currentMiniMissileCount})");
+        //Debug.Log($"Adjusted Min Distance: {adjustedMinDistance} (Original: {minDistanceBetweenCircles}, Random Radius: {randomRadius}, Missile Count: {currentMiniMissileCount})");
 
         // 計算內圈和外圈的著彈點數量
         int innerCircleCount = Mathf.RoundToInt(currentMiniMissileCount * currentInnerCircleRatio); // 內圈著彈點數量
         int outerCircleCount = currentMiniMissileCount - innerCircleCount; // 外圈著彈點數量
         float innerRadius = randomRadius * innerRadiusFactor; // 內圈半徑
 
-        Debug.Log($"Inner Circle Count: {innerCircleCount}, Outer Circle Count: {outerCircleCount}, Inner Radius: {innerRadius}");
+        //Debug.Log($"Inner Circle Count: {innerCircleCount}, Outer Circle Count: {outerCircleCount}, Inner Radius: {innerRadius}");
 
         // 先生成內圈的著彈點
         for (int i = 0; i < innerCircleCount; i++)
@@ -1774,7 +1750,7 @@ public class Boss_Ai : MonoBehaviour
         {
             vfx = miniExplosionVFXPool.Dequeue();
             vfx.SetActive(true);
-            Debug.Log("Reusing MiniExplosionVFX from pool.");
+            //Debug.Log("Reusing MiniExplosionVFX from pool.");
         }
         else
         {
@@ -1948,6 +1924,34 @@ public class Boss_Ai : MonoBehaviour
     {
         Destroy(DestroyObj);
     }
+
+
+
+    // 播放左腳腳步聲（由 Animation Event 觸發）
+    public void PlayLeftFootstepSound()
+    {
+        if (isDead || enemyAudioSource == null || leftFootstepSound == null) return;
+
+        // 隨機化音量和音高
+        enemyAudioSource.volume = Random.Range(footstepVolumeMin, footstepVolumeMax);
+        enemyAudioSource.pitch = Random.Range(footstepPitchMin, footstepPitchMax);
+        enemyAudioSource.PlayOneShot(leftFootstepSound);
+        //Debug.Log("Left footstep sound played.");
+    }
+
+    // 播放右腳腳步聲（由 Animation Event 觸發）
+    public void PlayRightFootstepSound()
+    {
+        if (isDead || enemyAudioSource == null || rightFootstepSound == null) return;
+
+        // 隨機化音量和音高
+        enemyAudioSource.volume = Random.Range(footstepVolumeMin, footstepVolumeMax);
+        enemyAudioSource.pitch = Random.Range(footstepPitchMin, footstepPitchMax);
+        enemyAudioSource.PlayOneShot(rightFootstepSound);
+        //Debug.Log("Right footstep sound played.");
+    }
+
+
 
     //=================================================================================================================================================================================
 

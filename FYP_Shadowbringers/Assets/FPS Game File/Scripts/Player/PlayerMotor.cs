@@ -20,6 +20,11 @@ public class PlayerMotor : MonoBehaviour
     public bool sprinting;
     public float crouchTimer;
 
+    [SerializeField] public float maxStamina = 100f;
+    [SerializeField] public float currentStamina;
+    [SerializeField] private float staminaDrainRate = 10f; // 每秒消耗的疲勞值
+    [SerializeField] private float staminaRegenRate = 5f;  // 每秒恢復的疲勞值
+
     [SerializeField] private float baseStepSpeed = 0.5f;
     [SerializeField] private float sprinStepMultipler = 0.6f;
     private float footstepTimer = 0;
@@ -33,17 +38,53 @@ public class PlayerMotor : MonoBehaviour
     [Range(0.1f, 0.5f)]
     public float pitchChangeMultiplier = 0.2f;
 
-    // Start is called before the first frame update
+    // 引用 Stamina UI 腳本
+    private PlayerStamina staminaUI;
+
+    // 公開 currentStamina 和 maxStamina，供其他腳本（如 PlayerStaminaUI）訪問
+    public float CurrentStamina => currentStamina;
+    public float MaxStamina => maxStamina;
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
         currentSpeed = speed;
+        currentStamina = maxStamina;
+
+        // 獲取 PlayerStaminaUI 組件
+        staminaUI = FindObjectOfType<PlayerStamina>();
+        if (staminaUI == null)
+        {
+            Debug.LogError("PlayerStaminaUI not found in the scene!");
+        }
     }
 
-    // Update is called once per frame
     void Update()
     {
         isGrounded = controller.isGrounded;
+
+        float previousStamina = currentStamina; // 記錄更新前的體力值
+
+        if (sprinting && currentStamina > 0)
+        {
+            currentStamina -= staminaDrainRate * Time.deltaTime;
+            if (currentStamina <= 0)
+            {
+                sprinting = false; // 疲勞耗盡，停止跑步
+                currentSpeed = speed;
+            }
+        }
+        else if (currentStamina < maxStamina)
+        {
+            currentStamina += staminaRegenRate * Time.deltaTime;
+            currentStamina = Mathf.Clamp(currentStamina, 0, maxStamina);
+        }
+
+        // 如果體力值改變，通知 Stamina UI
+        if (previousStamina != currentStamina && staminaUI != null)
+        {
+            staminaUI.OnStaminaChanged();
+        }
 
         if (lerpCrouch)
         {
@@ -63,7 +104,6 @@ public class PlayerMotor : MonoBehaviour
         }
     }
 
-    //receive the inputs for our InputManager.cs and apply them to our character controller.
     public void ProcessMove(Vector2 input)
     {
         moveDirection = Vector3.zero;
@@ -91,12 +131,8 @@ public class PlayerMotor : MonoBehaviour
         if (footstepTimer <= 0)
         {
             myAudioSource.PlayOneShot(ramdomSFX);
-
             footstepTimer = GetCurrenOffset;
         }
-
-        
-        
     }
 
     public void Jump()
@@ -107,7 +143,6 @@ public class PlayerMotor : MonoBehaviour
         }
     }
 
-
     public void Crouch()
     {
         crouching = !crouching;
@@ -115,12 +150,15 @@ public class PlayerMotor : MonoBehaviour
         lerpCrouch = true;
     }
 
-    public void Sprint()
+    public void Sprint(bool isPressed)
     {
-        sprinting = !sprinting;
-        if (sprinting)
-            currentSpeed = runSpeed;
-        else
-            currentSpeed = speed;
+        sprinting = isPressed;
+        currentSpeed = sprinting ? runSpeed : speed;
+
+        // 通知 Stamina UI 體力可能會改變（例如開始跑步時）
+        if (staminaUI != null)
+        {
+            staminaUI.OnStaminaChanged();
+        }
     }
 }
