@@ -15523,7 +15523,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Intensity: 18.48
+  m_Intensity: 19.12
   m_EnableSpotReflector: 1
   m_LuxAtDistance: 1
   m_InnerSpotPercent: 0
@@ -15645,7 +15645,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 0.58508366, g: 0.7169812, b: 0.71381307, a: 1}
-  m_Intensity: 45702.945
+  m_Intensity: 71220.3
   m_Range: 14.5
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -16025,7 +16025,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Intensity: 18.48
+  m_Intensity: 19.12
   m_EnableSpotReflector: 1
   m_LuxAtDistance: 1
   m_InnerSpotPercent: 0
@@ -16147,7 +16147,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 0.58508366, g: 0.7169812, b: 0.71381307, a: 1}
-  m_Intensity: 45702.945
+  m_Intensity: 71220.3
   m_Range: 14.5
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -46419,7 +46419,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Intensity: 18.48
+  m_Intensity: 19.12
   m_EnableSpotReflector: 1
   m_LuxAtDistance: 1
   m_InnerSpotPercent: 0
@@ -46541,7 +46541,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 0.58508366, g: 0.7169812, b: 0.71381307, a: 1}
-  m_Intensity: 45702.945
+  m_Intensity: 71220.3
   m_Range: 14.5
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -51713,6 +51713,10 @@ MonoBehaviour:
   crouching: 0
   sprinting: 0
   crouchTimer: 0
+  maxStamina: 100
+  currentStamina: 0
+  staminaDrainRate: 10
+  staminaRegenRate: 5
   baseStepSpeed: 0.47
   sprinStepMultipler: 0.6
   myAudioSource: {fileID: 2036573947}
