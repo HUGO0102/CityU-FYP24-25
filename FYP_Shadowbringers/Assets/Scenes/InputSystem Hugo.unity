@@ -676,17 +676,17 @@ PrefabInstance:
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.1261775
+      value: 0.12617752
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.000000017068862
+      value: -0.000000017068862
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.0000000021710582
+      value: 0.0000000021710584
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
@@ -3575,8 +3575,7 @@ MonoBehaviour:
     type: 3}
   _leftSpawnPoint: {fileID: 48350221}
   _rightSpawnPoint: {fileID: 1707883021}
-  _moveSpeed: 580
-  _barLifetime: 1.54
+  _centerPoint: {fileID: 0}
   canvas: {fileID: 2143231968}
 --- !u!4 &888956441
 Transform:
@@ -6151,17 +6150,17 @@ PrefabInstance:
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.1261775
+      value: 0.12617752
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.000000017068862
+      value: -0.000000017068862
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.0000000021710582
+      value: 0.0000000021710584
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
@@ -6567,6 +6566,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sfxSource: {fileID: 1637474977}
+  OnBeatSFX: []
+  OnBeatvolume: 1
   sfxList:
   - name: HitSFX
     clip: {fileID: 8300000, guid: 1a860e8f06df5714d88ad9f84eb30c42, type: 3}
@@ -9705,7 +9706,7 @@ PrefabInstance:
     - target: {fileID: 5608877947442863836, guid: f06260f79d3cae047ba294a7447a6bc9,
         type: 3}
       propertyPath: m_Name
-      value: Robots01_V7_LP_UV_Rig
+      value: Sinper_Bot
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f06260f79d3cae047ba294a7447a6bc9, type: 3}
@@ -10445,26 +10446,107 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dcfa3bbeac4d1124aa42c86fbfe49bd0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyType: 1
   agent: {fileID: 0}
-  health: 5
-  meleeDetectionRadius: 10
-  rangedDetectionRadius: 15
+  player: {fileID: 0}
   TargetLooker: {fileID: 1037853728}
-  enemyRenderer: {fileID: 0}
-  hitColor: {r: 1, g: 0, b: 0, a: 1}
-  colorChangeDuration: 0.1
-  enemyAnim: {fileID: 0}
-  StopMovingAttacGap: 2
-  projectilePrefab: {fileID: 1584511123928177943, guid: 879e8bdbca23d194481b8f1b76e6cea1,
-    type: 3}
-  projectileSpawnPoint: {fileID: 91643298}
-  BulletSpeed: 30
-  ShootingGapSec: 5
-  aimingLine: {fileID: 6900893927499530373}
-  aimingLineStartShowTime: 3
-  aimingLineColor: {r: 1, g: 0, b: 0, a: 1}
-  lineWidth: 0.02
+  animator: {fileID: 0}
+  DestroyObj: {fileID: 0}
+  health: 5
+  maxHealth: 0
+  lowHealth: 0
+  whatIsGround:
+    serializedVersion: 2
+    m_Bits: 0
+  whatIsPlayer:
+    serializedVersion: 2
+    m_Bits: 0
+  walkPoint: {x: 0, y: 0, z: 0}
+  walkPointSet: 0
+  walkPointRange: 0
+  isDead: 0
+  hited: 0
+  sightRange: 0
+  attackRange: 0
+  playerInSightRange: 0
+  playerInAttackRange: 0
+  spark: {fileID: 0}
+  shakeDuration: 0.2
+  maxShakeMagnitude: 0.2
+  minShakeMagnitude: 0.05
+  maxShakeDistance: 25
+  timeBetweenAttacks: 2
+  alreadyAttacked: 0
+  minigun_Fire_Density: 20
+  minigun_Fire_Gap: 0.1
+  shootingVFXPrefab: {fileID: 0}
+  vfxPoolSize: 2
+  rBarrelLocation: {fileID: 0}
+  lBarrelLocation: {fileID: 0}
+  rightBarrelSpinner: {fileID: 0}
+  leftBarrelSpinner: {fileID: 0}
+  rightGunAudioSource: {fileID: 0}
+  leftGunAudioSource: {fileID: 0}
+  rightBarrelLight: {fileID: 0}
+  leftBarrelLight: {fileID: 0}
+  destroyTimer: 2
+  shotPower: 600
+  maxLightIntensity: 2
+  lightFadeDuration: 0.5
+  impactCirclePrefab: {fileID: 0}
+  missileCount: 3
+  missileLaunchDelay: 1.5
+  missileBeatsToExpand: 2
+  missileLaunchPosition: {fileID: 0}
+  missileLaunchVFXPrefab: {fileID: 0}
+  missileVFXPoolSize: 3
+  missileVFXDuration: 5
+  explosionVFXPrefab: {fileID: 0}
+  explosionVFXPoolSize: 3
+  explosionVFXDuration: 5
+  miniImpactCirclePrefab: {fileID: 0}
+  miniMissileCount: 10
+  miniMissileLaunchDelay: 0.2
+  miniMissileBeatsToExpand: 8
+  randomRadius: 10
+  minDistanceBetweenCircles: 2
+  innerRadiusFactor: 0.5
+  innerCircleRatio: 0.3
+  innerConcentrationFactor: 0.3
+  outerConcentrationFactor: 0.7
+  innerOuterGap: 0.7
+  lowHealthMiniMissileCount: 20
+  lowHealthMiniMissileLaunchDelay: 0.125
+  lowHealthInnerCircleRatio: 0.1
+  lowHealthInnerConcentrationFactor: 0.1
+  lowHealthInnerOuterGap: 0.3
+  leftMiniMissileSpawnPoint: {fileID: 0}
+  rightMiniMissileSpawnPoint: {fileID: 0}
+  miniMissileLaunchVFXPrefab: {fileID: 0}
+  miniMissileVFXPoolSize: 10
+  miniMissileVFXDuration: 3
+  miniExplosionVFXPrefab: {fileID: 0}
+  miniExplosionVFXPoolSize: 10
+  miniExplosionVFXDuration: 3
+  shieldObject: {fileID: 0}
+  shieldCooldown: 20
+  lowHealthShieldCooldown: 10
+  defaultShieldHealth: 100
+  lowHealthShieldHealth: 200
+  maxShieldHealth: 100
+  repairVFXPrefab: {fileID: 0}
+  headRig: {fileID: 0}
+  handRig: {fileID: 0}
+  rigWeightTransitionDuration: 1
+  enemyAudioSource: {fileID: 0}
+  fireSound: {fileID: 0}
+  enemyAudioClip: []
+  leftFootstepSound: {fileID: 0}
+  rightFootstepSound: {fileID: 0}
+  footstepVolumeMin: 0.8
+  footstepVolumeMax: 1
+  footstepPitchMin: 0.9
+  footstepPitchMax: 1.1
+  repairAudioClips: []
 --- !u!136 &6900893927499530375
 CapsuleCollider:
   m_ObjectHideFlags: 0

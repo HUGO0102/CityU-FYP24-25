@@ -14,6 +14,12 @@ public class Hit_Player : MonoBehaviour
             Debug.Log("Hit Player");
         }
 
+        if (other.gameObject.tag == "SniperBullets")
+        {
+            Health.TakeDamage(20);
+            Debug.Log("Hit Player");
+        }
+
         if (other.gameObject.tag == "MeleeEnemy_Attack")
         {
             Health.TakeDamage(5);
