@@ -1,8 +1,8 @@
-ï»¿
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
-using static UnityEngine.GraphicsBuffer;
-public class ShootingAi : MonoBehaviour
+
+public class SniperAi : MonoBehaviour
 {
     public NavMeshAgent agent;
 
@@ -11,11 +11,10 @@ public class ShootingAi : MonoBehaviour
     private MeshRenderer meshRenderer;
     public Animator animator;
 
-
-    //Animation bool
+    // Animation bool
     bool isIdle;
     bool isChase;
-    bool isAttack;
+    public bool isAttack;
     bool isHit;
     bool dead;
     bool isEquiping;
@@ -24,39 +23,37 @@ public class ShootingAi : MonoBehaviour
 
     public GameObject DestoryObj;
 
-    //Stats
+    // Stats
     public int health;
 
-    //Check for Ground/Obstacles
+    // Check for Ground/Obstacles
     public LayerMask whatIsGround, whatIsPlayer;
 
-    //Patroling
+    // Patroling
     public Vector3 walkPoint;
     public bool walkPointSet;
     public float walkPointRange;
 
-    //Attack Player
+    // Attack Player
     public float timeBetweenAttacks;
     bool alreadyAttacked;
     bool hited;
 
-    //States
+    // States
     public bool isDead;
     public float sightRange, attackRange;
     public bool playerInSightRange, playerInAttackRange;
 
-
     private TargetLooker targetLooker;
     private Vector3 targetPostition;
 
-    //VFX
+    // VFX
     [Header("VFX")]
     public ParticleSystem spark;
     public ParticleSystem onHitVFX;
     bool vfxIsCreated = false;
 
     private ParticleSystem onHitVFXInstance;
-
 
     [Header("Prefab Refrences")]
     public GameObject muzzleFlashPrefab;
@@ -68,7 +65,24 @@ public class ShootingAi : MonoBehaviour
     [Tooltip("Specify time to destory the casing object")][SerializeField] private float destroyTimer = 2f;
     [Tooltip("Bullet Speed")][SerializeField] private float shotPower = 500f;
 
-    //SFX
+    // Sniper Attack Settings
+    [Header("Sniper Attack Settings")]
+    [SerializeField] private float shootInterval = 3f; // ®gÀ»¶¡¹j¡]¬í¡AºË·Ç®É¶¡¡^
+    [SerializeField] private float initialDelay = 2f; // ¨C¦¸®gÀ»«eªºµ¥«Ý®É¶¡¡]¬í¡^
+    private Coroutine shootCoroutine;
+    private float lastShootTime = 0f; // °O¿ý¤W¦¸®gÀ»®É¶¡
+
+    // ®gÀ»½u³]¸m
+    [Header("Sniper Laser Settings")]
+    [SerializeField] private LineRenderer laserLine; // ®gÀ»½uªº LineRenderer ²Õ¥ó
+    [SerializeField] private float laserMaxWidth = 0.5f; // ®gÀ»½uªº³Ì¤j¼e«×
+    [SerializeField] private float laserMinWidth = 0.1f; // ®gÀ»½uªº³Ì¤p¼e«×
+    [SerializeField] private float laserTransitionTime = 3f; // ®gÀ»½u±q²Ê¨ì²Óªº¹L´ç®É¶¡¡]»P shootInterval ¤@­P¡^
+    [SerializeField] private Color laserStartColor = Color.red; // ®gÀ»½uªº°_©lÃC¦â
+    [SerializeField] private Color laserEndColor = Color.red; // ®gÀ»½uªºµ²§ôÃC¦â
+    private Coroutine laserCoroutine; // ¥Î©ó±±¨î®gÀ»½u°Êµeªº¨óµ{
+
+    // SFX
     [Header("SoundFX")]
     public AudioSource gunAudioSource;
     public AudioSource enemyAudioSource;
@@ -78,7 +92,6 @@ public class ShootingAi : MonoBehaviour
     public float volumeChangeMultiplier = 0.2f;
     [Range(0.1f, 0.5f)]
     public float pitchChangeMultiplier = 0.2f;
-
 
     private void Awake()
     {
@@ -92,38 +105,50 @@ public class ShootingAi : MonoBehaviour
         if (targetLooker == null)
             targetLooker = GetComponentInChildren<TargetLooker>();
 
-        
+        // ªì©l¤Æ LineRenderer
+        if (laserLine == null)
+        {
+            laserLine = gameObject.AddComponent<LineRenderer>();
+        }
+        laserLine.positionCount = 2; // ³]¸m¬° 2 ­ÓÂI¡]°_©lÂI©M²×ÂI¡^
+        laserLine.startColor = laserStartColor;
+        laserLine.endColor = laserEndColor;
+        laserLine.startWidth = 0f; // ªì©l¼e«×¬° 0¡]ÁôÂÃ¡^
+        laserLine.endWidth = 0f;
+        laserLine.enabled = false; // ªì©lÁôÂÃ
     }
+
     private void Update()
     {
         SwitchAnimation();
 
         if (!isDead)
         {
-            //Check if Player in sightrange
+            // Check if Player in sightrange
             playerInSightRange = Physics.CheckSphere(transform.position, sightRange, whatIsPlayer);
 
-            //Check if Player in attackrange
+            // Check if Player in attackrange
             playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, whatIsPlayer);
 
             targetPostition = new Vector3(player.position.x, this.transform.position.y, player.position.z);
 
-            if (!playerInSightRange && !playerInAttackRange && !alreadyAttacked)
+            if (!playerInSightRange && !playerInAttackRange)
             {
                 isIdle = false;
                 isAttack = false;
                 isChase = true;
                 Patroling();
+                ResetAttack();
             }
-            if (playerInSightRange && !playerInAttackRange && !alreadyAttacked)
+            else if (playerInSightRange && !playerInAttackRange)
             {
-
                 isIdle = false;
                 isAttack = false;
                 isChase = true;
                 ChasePlayer();
+                ResetAttack();
             }
-            if (playerInAttackRange && playerInSightRange)
+            else if (playerInAttackRange && playerInSightRange)
             {
                 isChase = false;
                 isIdle = false;
@@ -152,23 +177,19 @@ public class ShootingAi : MonoBehaviour
 
         if (!walkPointSet) SearchWalkPoint();
 
-        //Calculate direction and walk to Point
-        if (walkPointSet){
+        if (walkPointSet)
+        {
             agent.SetDestination(walkPoint);
-
-            //Vector3 direction = walkPoint - transform.position;
-            //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 0.15f);
         }
 
-        //Calculates DistanceToWalkPoint
         Vector3 distanceToWalkPoint = transform.position - walkPoint;
 
-        //Walkpoint reached
         if (distanceToWalkPoint.magnitude < 1f)
             walkPointSet = false;
 
-
+        isAttack = false;
     }
+
     private void SearchWalkPoint()
     {
         if (targetLooker != null)
@@ -179,21 +200,26 @@ public class ShootingAi : MonoBehaviour
 
         walkPoint = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
 
-        if (Physics.Raycast(walkPoint,-transform.up, 2,whatIsGround))
-        walkPointSet = true;
+        if (Physics.Raycast(walkPoint, -transform.up, 2, whatIsGround))
+            walkPointSet = true;
     }
+
     private void ChasePlayer()
     {
         if (isDead) return;
 
-        agent.speed = 5f;
+        agent.speed = 4f;
 
         if (targetLooker != null)
             TargetLooker.GetComponent<TargetLooker>().targetTrans = player;
 
         agent.SetDestination(player.position);
 
+        isAttack = false;
+
+        Debug.Log("Sniper is chasing player!");
     }
+
     private void AttackPlayer()
     {
         if (isDead) return;
@@ -201,27 +227,129 @@ public class ShootingAi : MonoBehaviour
         agent.speed = 2f;
 
         if (targetLooker != null)
-        TargetLooker.GetComponent<TargetLooker>().targetTrans = player;
+            TargetLooker.GetComponent<TargetLooker>().targetTrans = player;
 
-        //Make sure enemy doesn't move
         agent.SetDestination(transform.position);
 
         transform.LookAt(targetPostition);
 
         if (!alreadyAttacked)
         {
-            if (animator != null)
-                alreadyAttacked = true;      
+            alreadyAttacked = true;
+
+            if (shootCoroutine == null)
+            {
+                shootCoroutine = StartCoroutine(ShootAtIntervals());
+            }
         }
-
-
-
-        
     }
+
     private void ResetAttack()
     {
         if (isDead) return;
+
         alreadyAttacked = false;
+
+        if (shootCoroutine != null)
+        {
+            StopCoroutine(shootCoroutine);
+            shootCoroutine = null;
+            Debug.Log("Sniper stopped shooting coroutine.");
+        }
+
+        if (laserCoroutine != null)
+        {
+            StopCoroutine(laserCoroutine);
+            laserCoroutine = null;
+        }
+
+        // ÁôÂÃ®gÀ»½u
+        laserLine.enabled = false;
+    }
+
+    private IEnumerator ShootAtIntervals()
+    {
+        while (true)
+        {
+            if (isDead) // ÀË¬d¦º¤`ª¬ºA
+            {
+                laserLine.enabled = false; // ÁôÂÃ®gÀ»½u
+                yield break; // ¥ß§Y°h¥X¨óµ{
+            }
+
+            if (isAttack)
+            {
+                // µ¥«Ý 2 ¬í¡]¨C¦¸®gÀ»«eªºµ¥«Ý¡^
+                yield return new WaitForSeconds(initialDelay);
+
+                if (isDead) // ¦A¦¸ÀË¬d¦º¤`ª¬ºA
+                {
+                    laserLine.enabled = false;
+                    yield break;
+                }
+
+                // Åã¥Ü®gÀ»½u¨Ã¶}©l°Êµe
+                if (laserCoroutine != null)
+                {
+                    StopCoroutine(laserCoroutine);
+                }
+                laserCoroutine = StartCoroutine(AnimateLaserLine());
+
+                // µ¥«Ý®gÀ»¶¡¹j¡]3 ¬í¡AºË·Ç®É¶¡¡^
+                yield return new WaitForSeconds(shootInterval);
+
+                if (isDead) // ¦A¦¸ÀË¬d¦º¤`ª¬ºA
+                {
+                    laserLine.enabled = false;
+                    yield break;
+                }
+
+                // ®gÀ»
+                Shoot();
+
+                // ®gÀ»«áÁôÂÃ®gÀ»½u
+                laserLine.enabled = false;
+            }
+            else
+            {
+                // ¦pªG¤£¦b Attack ª¬ºA¡A½T«O®gÀ»½uÁôÂÃ
+                laserLine.enabled = false;
+                yield return null;
+            }
+        }
+    }
+
+    private IEnumerator AnimateLaserLine()
+    {
+        laserLine.enabled = true; // Åã¥Ü®gÀ»½u
+
+        float elapsedTime = 0f;
+
+        while (elapsedTime < laserTransitionTime)
+        {
+            if (!isAttack || isDead) // ÀË¬d Attack ª¬ºA©M¦º¤`ª¬ºA
+            {
+                laserLine.enabled = false;
+                yield break; // ¦pªGÂ÷¶} Attack ª¬ºA©Î¦º¤`¡A°±¤î°Êµe
+            }
+
+            // §ó·s®gÀ»½uªº¦ì¸m
+            laserLine.SetPosition(0, barrelLocation.position); // °_©lÂI¡Gºj¤f
+            laserLine.SetPosition(1, player.position); // ²×ÂI¡Gª±®a¦ì¸m
+
+            // ±q²Ê¨ì²Ó¹L´ç
+            float t = elapsedTime / laserTransitionTime;
+            float currentWidth = Mathf.Lerp(laserMaxWidth, laserMinWidth, t);
+            laserLine.startWidth = currentWidth;
+            laserLine.endWidth = currentWidth;
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // ½T«O³Ì«á¼e«×¬°³Ì¤p­È
+        laserLine.startWidth = laserMinWidth;
+        laserLine.endWidth = laserMinWidth;
     }
 
     public void SetHitedtoFalse()
@@ -234,16 +362,13 @@ public class ShootingAi : MonoBehaviour
     {
         hited = true;
 
-        //SFX
         AudioClip ramdomSFX = enemyAudioClip[Random.Range(0, 3)];
         enemyAudioSource.volume = Random.Range(1 - volumeChangeMultiplier, 1);
         enemyAudioSource.pitch = Random.Range(1 - pitchChangeMultiplier, 1 + pitchChangeMultiplier);
         enemyAudioSource.PlayOneShot(ramdomSFX);
 
-
         if (animator != null)
         {
-            //VFX
             if (!vfxIsCreated)
             {
                 if (onHitVFX != null)
@@ -254,21 +379,23 @@ public class ShootingAi : MonoBehaviour
 
             animator.SetTrigger("isHited");
         }
-        
 
         health -= damage;
-        Debug.Log("Enemy Health" + health);
-        if (health <= 0){
+        Debug.Log("Enemy Health: " + health);
+        if (health <= 0)
+        {
             isDead = true;
-            //Invoke("Destroy", 2.8f);
+
+            // ¥ß§Y°±¤î®gÀ»¦æ¬°
+            ResetAttack();
 
             if (animator != null)
             {
-              DestroyAnimation();
+                DestroyAnimation();
             }
-            
         }
     }
+
     private void DestroyAnimation()
     {
         gameObject.GetComponent<NavMeshAgent>().enabled = false;
@@ -276,16 +403,12 @@ public class ShootingAi : MonoBehaviour
 
         enemyAudioSource.PlayOneShot(enemyAudioClip[4]);
 
-        //VFX
         if (!vfxIsCreated)
         {
             Instantiate(spark, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), transform.rotation);
             vfxIsCreated = true;
         }
 
-
-
-        //Delay 10sec
         Invoke("DestoryObject", 10);
     }
 
@@ -294,9 +417,25 @@ public class ShootingAi : MonoBehaviour
         Destroy(DestoryObj);
     }
 
-
     public void Shoot()
     {
+        if (!isAttack || isDead) // ÀË¬d Attack ª¬ºA©M¦º¤`ª¬ºA
+        {
+            Debug.Log("Sniper cannot shoot while chasing or dead!");
+            return;
+        }
+
+        // Á`¶g´Á¬° initialDelay + shootInterval¡]2 ¬í + 3 ¬í = 5 ¬í¡^
+        float totalCycleTime = initialDelay + shootInterval;
+        if (Time.time - lastShootTime < totalCycleTime)
+        {
+            Debug.Log("Sniper is on cooldown!");
+            return;
+        }
+
+        lastShootTime = Time.time;
+
+        Debug.Log("Sniper shoot");
         gunAudioSource.PlayOneShot(fireSound);
 
         if (muzzleFlashPrefab)
@@ -306,17 +445,19 @@ public class ShootingAi : MonoBehaviour
             Destroy(tempFlash, destroyTimer);
         }
 
-        // å¾žå°è±¡æ± ä¸­ç²å–å­å½ˆ
+        // ±q BulletPoolManager Àò¨ú¤l¼u
         GameObject bullet = BulletPoolManager.Instance.GetEnemyBullet();
         bullet.SetActive(true);
         bullet.transform.position = barrelLocation.position;
         bullet.transform.rotation = barrelLocation.rotation;
 
+        // ³]¸m¤l¼u¼ÐÅÒ¬° Sniper_Bullet
+        bullet.tag = "SniperBullets";
+
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
         rb.velocity = Vector3.zero;
         rb.AddForce(barrelLocation.forward * shotPower);
     }
-
 
     private void OnDrawGizmos()
     {

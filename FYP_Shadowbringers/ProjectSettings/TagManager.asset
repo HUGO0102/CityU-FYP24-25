@@ -15,6 +15,7 @@ TagManager:
   - PlayerBullets
   - MeleeEnemy_Attack
   - Shield
+  - SniperBullets
   layers:
   - Default
   - TransparentFX

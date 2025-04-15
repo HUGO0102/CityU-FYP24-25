@@ -31,14 +31,18 @@ public class BulletHitBox : MonoBehaviour
                 }
                 ReturnToPool();
             }
+            else if(collision.gameObject.CompareTag("Untagged"))
+            {
+                ReturnToPool();
+            }
         }
     }
 
-    // 處理敵人子彈的觸發器碰撞（使用 OnTriggerEnter）
+    // 處理敵人子彈和狙擊手子彈的觸發器碰撞（使用 OnTriggerEnter）
     private void OnTriggerEnter(Collider other)
     {
-        // 僅處理敵人子彈
-        if (gameObject.CompareTag("EnemyBullets"))
+        // 處理敵人子彈和狙擊手子彈
+        if (gameObject.CompareTag("EnemyBullets") || gameObject.CompareTag("SniperBullets"))
         {
             if (other.gameObject.CompareTag("Player") || other.gameObject.CompareTag("Untagged"))
             {
@@ -60,6 +64,15 @@ public class BulletHitBox : MonoBehaviour
                 }
                 ReturnToPool();
             }
+            else if (other.gameObject.CompareTag("Wall")) // 添加對牆壁的檢測
+            {
+                if (hitEffect != null)
+                {
+                    ParticleSystem effect = Instantiate(hitEffect, transform.position, Quaternion.identity);
+                    Destroy(effect.gameObject, effect.main.duration);
+                }
+                ReturnToPool();
+            }
         }
     }
 
@@ -72,7 +85,7 @@ public class BulletHitBox : MonoBehaviour
             {
                 BulletPoolManager.Instance.ReturnPlayerBullet(gameObject);
             }
-            else if (gameObject.CompareTag("EnemyBullets"))
+            else if (gameObject.CompareTag("EnemyBullets") || gameObject.CompareTag("Sniper_Bullet"))
             {
                 BulletPoolManager.Instance.ReturnEnemyBullet(gameObject);
             }
