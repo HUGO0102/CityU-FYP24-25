@@ -1,27 +1,30 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Playables;
 
 public class SceneManager_Pakour : MonoBehaviour
 {
-    public Animator EyeBlink;
-    public Animation OxygenTank;
-    public Animation LookAround;
+    public PlayableDirector WakeUpCutscene;
+    //public GameObject controlPanel;
     private bool inCutscene;
 
     // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
-        EyeBlink.SetTrigger("isBlink");
-        OxygenTank.Play();
+        //WakeUpCutscene = GetComponent<PlayableDirector>();
         StartCoroutine("Cutscene");
+    }
+
+    private void Start()
+    {
+        WakeUpCutscene.Play();
     }
 
     private IEnumerator Cutscene()
     {
         inCutscene = true;
         yield return new WaitForSeconds(7.5f);
-
         inCutscene = false;
     }
 
