@@ -68,7 +68,8 @@ MonoBehaviour:
   beforePostProcessCustomPostProcesses: []
   afterPostProcessBlursCustomPostProcesses: []
   afterPostProcessCustomPostProcesses:
-  - BeautifyHDRP.Beautify, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  - BeautifyHDRP.Beautify, Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral,
+    PublicKeyToken=null
   beforeTAACustomPostProcesses: []
   lightLayerName0: Light Layer default
   lightLayerName1: Light Layer 1
