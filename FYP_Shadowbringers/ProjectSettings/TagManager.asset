@@ -16,8 +16,7 @@ TagManager:
   - MeleeEnemy_Attack
   - Shield
   - SniperBullets
-  - DoorTrigger
-  - EnemyTrigger
+  - Pickable
   layers:
   - Default
   - TransparentFX
