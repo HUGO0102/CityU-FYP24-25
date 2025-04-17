@@ -78,9 +78,12 @@ public class Enemy : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        patrolCenter = EnemyManager.Instance.SpawnCenter;
+        //patrolCenter = EnemyManager.Instance.SpawnCenter;
+        patrolCenter = this.gameObject.transform;
 
-        patrolRadius = EnemyManager.Instance.spawnRadius;
+        //patrolRadius = EnemyManager.Instance.spawnRadius;
+        patrolRadius = 10f;
+
         agent = GetComponent<NavMeshAgent>();
         Player = GameObject.FindGameObjectWithTag("Player").transform;
         PlayerCharacterController = Player.GetComponent<CharacterController>();
