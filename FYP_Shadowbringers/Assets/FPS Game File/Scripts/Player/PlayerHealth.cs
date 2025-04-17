@@ -5,14 +5,15 @@ using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
-    private float health;
+    [SerializeField] private float health;
     private float lerpTimer;
 
     [Header("Health Bar")]
     public float maxHealth = 100f;
     public float chipSpeed = 2f;
-    public Image frontHealthBar;
-    public Image backHealthBar;
+    public Slider frontHealthBar;
+    public Slider backHealthBar;
+    public Image backHealthFill; // 僅保留 BackSlider -> Fill 的 Image 用於改變顏色
 
     [Header("Damage Overlay")]
     public Image overlay; // our DamageOverlay Gameobject
@@ -21,19 +22,21 @@ public class PlayerHealth : MonoBehaviour
 
     private float durationTimer; // timer to check against the duration
 
-    // Start is called before the first frame update
     void Start()
     {
         health = maxHealth;
         overlay.color = new Color(overlay.color.r, overlay.color.g, overlay.color.b, 0);
+
+        // 初始更新 Slider
+        UpdateHealthUI();
     }
 
-    // Update is called once per frame
     void Update()
     {
         health = Mathf.Clamp(health, 0, maxHealth);
         UpdateHealthUI();
-        if(overlay.color.a > 0)
+
+        if (overlay.color.a > 0)
         {
             if (health < 30)
                 return;
@@ -51,36 +54,45 @@ public class PlayerHealth : MonoBehaviour
 
     public void UpdateHealthUI()
     {
-        //Debug.Log("Playe Health" + health);
-        float fillF = frontHealthBar.fillAmount;
-        float fillB = backHealthBar.fillAmount;
-        float hFraction = health / maxHealth;
-        if (fillB > hFraction)
+        // 前景條即時更新為當前 health 值
+        if (frontHealthBar != null)
+            frontHealthBar.value = health;
+
+        // 背景條根據生命值變化顯示延遲效果
+        if (backHealthBar != null)
         {
-            frontHealthBar.fillAmount = hFraction;
-            backHealthBar.color = Color.red;
-            lerpTimer += Time.deltaTime;
-            float percentComplete = lerpTimer / chipSpeed;
-            percentComplete = percentComplete * percentComplete;
-            backHealthBar.fillAmount = Mathf.Lerp(fillB, hFraction, percentComplete);
-        }
-        if (fillF < hFraction)
-        {
-            backHealthBar.color = Color.green;
-            backHealthBar.fillAmount = hFraction;
-            lerpTimer += Time.deltaTime;
-            float percentComplete = lerpTimer / chipSpeed;
-            percentComplete = percentComplete * percentComplete;
-            frontHealthBar.fillAmount = Mathf.Lerp(fillF, backHealthBar.fillAmount, percentComplete);
+            float fillB = backHealthBar.value;
+            float previousFillB = fillB; // 記錄當前的背景條值，用於判斷變化方向
+
+            // 判斷生命值是減少還是恢復
+            bool isHealthDecreasing = health < previousFillB;
+
+            if (isHealthDecreasing && fillB > health) // 生命值減少
+            {
+                if (backHealthFill != null)
+                    backHealthFill.color = Color.red; // 背景條變紅
+                lerpTimer += Time.deltaTime;
+                float percentComplete = lerpTimer / chipSpeed;
+                percentComplete = percentComplete * percentComplete; // 平方效果，使過渡更平滑
+                backHealthBar.value = Mathf.Lerp(fillB, health, percentComplete);
+            }
+            else if (!isHealthDecreasing && fillB < health) // 生命值恢復
+            {
+                if (backHealthFill != null)
+                    backHealthFill.color = Color.green; // 背景條變綠
+                lerpTimer += Time.deltaTime;
+                float percentComplete = lerpTimer / chipSpeed;
+                percentComplete = percentComplete * percentComplete;
+                backHealthBar.value = Mathf.Lerp(fillB, health, percentComplete);
+            }
         }
     }
 
     public void TakeDamage(float damage)
-
     {
         health -= damage;
         lerpTimer = 0f;
-        durationTimer = 0; 
+        durationTimer = 0;
         overlay.color = new Color(overlay.color.r, overlay.color.g, overlay.color.b, 1);
     }
 

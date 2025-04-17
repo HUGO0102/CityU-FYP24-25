@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 262024461649480887}
   - component: {fileID: 262024461649480881}
   m_Layer: 6
-  m_Name: Enemy_Boss
+  m_Name: Boss_Enemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32,7 +32,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 262024461649480777}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -17.6, y: 0.0000009536743, z: -17.04}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -228,7 +228,7 @@ MonoBehaviour:
   animator: {fileID: 262024461649480779}
   DestroyObj: {fileID: 262024461649480777}
   health: 3000
-  maxHealth: 0
+  maxHealth: 3000
   lowHealth: 0
   whatIsGround:
     serializedVersion: 2

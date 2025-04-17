@@ -150,6 +150,12 @@ public class GuitarShoot : MonoBehaviour
 
     public void Fire()
     {
+        if (Time.timeScale == 0f) // 檢查遊戲是否暫停
+        {
+            Debug.Log("Game is paused, cannot fire!");
+            return; // 如果遊戲暫停，阻止射擊
+        }
+
         if (playerAnimator != null)
         {
             playerAnimator.SetBool("Attack", true);
@@ -160,6 +166,12 @@ public class GuitarShoot : MonoBehaviour
     // 執行射擊邏輯，接受 HitOnBeat 條件
     public void Shoot(bool hitOnBeat = false)
     {
+        if (Time.timeScale == 0f) // 檢查遊戲是否暫停
+        {
+            Debug.Log("Game is paused, cannot shoot!");
+            return; // 如果遊戲暫停，阻止射擊
+        }
+
         // 檢查射擊頻率
         if (Time.time < nextFireTime)
         {
@@ -174,7 +186,7 @@ public class GuitarShoot : MonoBehaviour
             int randomIndex = Random.Range(0, fireSounds.Length); // 隨機選擇一個音效
             AudioClip selectedSound = fireSounds[randomIndex];
             source.PlayOneShot(selectedSound);
-            Debug.Log($"Playing fire sound: {selectedSound.name}");
+            //Debug.Log($"Playing fire sound: {selectedSound.name}");
         }
         else
         {
@@ -260,7 +272,7 @@ public class GuitarShoot : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit))
         {
-            Debug.Log($"Aim point hit at: {hit.point}"); // 調試日誌
+            //Debug.Log($"Aim point hit at: {hit.point}"); // 調試日誌
             return hit.point;
         }
         else

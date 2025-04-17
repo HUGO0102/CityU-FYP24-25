@@ -30,8 +30,8 @@ public class Boss_Ai : MonoBehaviour
     public GameObject DestroyObj;
 
     // Stats
-    [SerializeField] public int health;
-    [SerializeField] private int maxHealth;
+    public int health;
+    [SerializeField] public int maxHealth;
     [SerializeField] public bool lowHealth;
 
     // Check for Ground/Obstacles
@@ -213,6 +213,11 @@ public class Boss_Ai : MonoBehaviour
 
     //===================================================================================================================================================================================================
 
+    [Header("Boss State UI")]
+    [SerializeField] private GameObject bossStateUI; // 引用 Boss_State UI
+
+
+
 
     // SFX
     [Header("SoundFX")]
@@ -236,7 +241,7 @@ public class Boss_Ai : MonoBehaviour
 
     private void Awake()
     {
-        player = GameObject.Find("Player").transform;
+        player = GameObject.Find("FPS_controller").transform;
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
 
@@ -256,12 +261,17 @@ public class Boss_Ai : MonoBehaviour
         {
             Debug.LogError("Shield object is not assigned in Boss_Ai!");
         }
+
+        if (bossStateUI == null)
+        {
+            Debug.LogError("Boss_State UI reference is not assigned in Boss_Ai!");
+        }
     }
 
     private void Start()
     {
 
-        maxHealth = health;
+        health = maxHealth;
         maxShieldHealth = defaultShieldHealth;
 
         // 初始化 Muzzle Flash VFX 對象池
@@ -302,6 +312,12 @@ public class Boss_Ai : MonoBehaviour
             GameObject miniExplosionVFX = Instantiate(miniExplosionVFXPrefab);
             miniExplosionVFX.SetActive(false);
             miniExplosionVFXPool.Enqueue(miniExplosionVFX);
+        }
+
+        // 初始隱藏 Boss_State UI
+        if (bossStateUI != null)
+        {
+            bossStateUI.SetActive(false);
         }
     }
 
@@ -392,6 +408,22 @@ public class Boss_Ai : MonoBehaviour
                 isIdle = true;
                 isWalking = false;
                 Idleing();
+            }
+        }
+
+        // 控制 Boss_State UI 的顯示與隱藏
+        if (bossStateUI != null)
+        {
+            bool shouldShowUI = playerInSightRange;
+            if (shouldShowUI && !bossStateUI.activeSelf)
+            {
+                bossStateUI.SetActive(true);
+                Debug.Log("Boss_State UI shown: Player is in sight range.");
+            }
+            else if (!shouldShowUI && bossStateUI.activeSelf)
+            {
+                bossStateUI.SetActive(false);
+                Debug.Log("Boss_State UI hidden: Player is out of sight range.");
             }
         }
     }
@@ -2180,6 +2212,11 @@ public class Boss_Ai : MonoBehaviour
     private void DestroyAnimation()
     {
         gameObject.GetComponent<NavMeshAgent>().enabled = false;
+
+       
+        StartCoroutine(SmoothRigWeightTransition(headRig, 0f, rigWeightTransitionDuration));
+        StartCoroutine(SmoothRigWeightTransition(handRig, 0f, rigWeightTransitionDuration));
+
         animator.Play("Dead");
 
         enemyAudioSource.PlayOneShot(enemyAudioClip[4]);
@@ -2244,6 +2281,17 @@ public class Boss_Ai : MonoBehaviour
     }
 
     //=================================================================================================================================================================================
+
+    public int GetShieldHealth()
+    {
+        return shieldHealth;
+    }
+
+    public int GetMaxShieldHealth()
+    {
+        return maxShieldHealth;
+    }
+
 
     private void OnDrawGizmos()
     {
