@@ -5,36 +5,31 @@ using UnityEngine.InputSystem;
 
 public class PlayerShoot : MonoBehaviour
 {
-
     private InputManager inputManager;
-    public SimpleShoot Shoot;
+    public GuitarShoot Shoot;
     public BeatCenter beatCenter;
-
 
     // Start is called before the first frame update
     void Start()
     {
         inputManager = GetComponent<InputManager>();
-        
     }
 
     // Update is called once per frame
     void Update()
     {
-        //inputManager.onHand.Shoot.triggered
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             Debug.Log("LeftMousePressing");
             Shoot.Fire();
+            bool hitOnBeat = beatCenter.leftBarInCenter && beatCenter.rightBarInCenter; // 直接使用狀態
+            Shoot.Shoot(hitOnBeat); // 傳遞 HitOnBeat 條件
 
-
-            if (beatCenter.leftBarInCenter && beatCenter.rightBarInCenter)
+            if (hitOnBeat)
             {
                 Debug.Log("Hit On Beat!!");
-                beatCenter.HitOnBeat();
+                beatCenter.AnimateImage(); // 觸發中心圓圈動畫
             }
         }
-
-        
     }
 }

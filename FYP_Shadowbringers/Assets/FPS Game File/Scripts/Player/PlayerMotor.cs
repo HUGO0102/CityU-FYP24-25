@@ -38,6 +38,8 @@ public class PlayerMotor : MonoBehaviour
     [Range(0.1f, 0.5f)]
     public float pitchChangeMultiplier = 0.2f;
 
+    public bool useFootsteps = true;
+
     // ¤Þ¥Î Stamina UI ¸}¥»
     private PlayerStamina staminaUI;
 
@@ -122,6 +124,7 @@ public class PlayerMotor : MonoBehaviour
     {
         if (!isGrounded) return;
         if (moveDirection == Vector3.zero) return;
+        if (!useFootsteps) return;
 
         AudioClip ramdomSFX = myAudioClip[Random.Range(0, 3)];
         myAudioSource.volume = Random.Range(1 - volumeChangeMultiplier, 1);
