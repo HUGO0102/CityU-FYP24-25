@@ -29,6 +29,9 @@ public class TriggerController : MonoBehaviour
     public GameObject BattleArea03;
     public GameObject BattleArea04;
 
+    public bool canSpawn1;
+    public bool canSpawn2;
+    public bool canSpawn4;
     // Start is called before the first frame update
     void Start()
     {
@@ -59,6 +62,8 @@ public class TriggerController : MonoBehaviour
             {
                 beatUI.SetActive(true);
                 AttackTips.SetActive(true);
+
+                canSpawn1 = true;
                 //BattleArea01.SetActive(true);
                 //BattleArea02.SetActive(true);
             }
@@ -67,6 +72,7 @@ public class TriggerController : MonoBehaviour
             {
                 //BattleArea03.SetActive(true);
                 //BattleArea04.SetActive(true);
+                canSpawn2 = true;
             }
 
             if (triggerIndex == 3)
@@ -77,6 +83,8 @@ public class TriggerController : MonoBehaviour
             if (triggerIndex == 4)
             {
                 Gate02.SetBool("Open", true);
+
+                canSpawn4 = true;
             }
         }
     }
