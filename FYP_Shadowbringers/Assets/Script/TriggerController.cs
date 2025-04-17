@@ -7,8 +7,9 @@ public class TriggerController : MonoBehaviour
     public EnemyManager enemyController;
     //public EquipScript equip;
     public int triggerIndex;
+    public GameObject beatUI;
 
-    public bool beatStart = false;
+    //public bool beatStart = false;
 
     /*[Header("Trigger")]
     public bool isDoorTrigger01;
@@ -31,7 +32,7 @@ public class TriggerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        beatUI.SetActive(false);
     }
 
     // Update is called once per frame
@@ -56,7 +57,7 @@ public class TriggerController : MonoBehaviour
 
             if (triggerIndex == 1)
             {
-                beatStart = true;
+                beatUI.SetActive(true);
                 AttackTips.SetActive(true);
                 //BattleArea01.SetActive(true);
                 //BattleArea02.SetActive(true);
