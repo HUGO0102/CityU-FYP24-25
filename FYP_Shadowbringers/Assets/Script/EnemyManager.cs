@@ -47,7 +47,7 @@ public class EnemyManager : MonoBehaviour
             if (triggerController.canSpawn2 == true)
                 canSpawn = true;
         }
-        else if (TriggerIndex == 4)
+        else if (TriggerIndex == 5)
         {
             if (triggerController.canSpawn4 == true)
                 canSpawn = true;
@@ -78,7 +78,25 @@ public class EnemyManager : MonoBehaviour
                     SpawnEnemy();
                     totalSpawnedEnemies++;
                 }
-            } 
+            }
+            if (totalSpawnedEnemies == maxSpawnEnemies && activeEnemies.Count == 0)
+            {
+                if (TriggerIndex == 1)
+                {
+                    triggerController.Collider01.gameObject.SetActive(false);
+                    triggerController.Collider02.gameObject.SetActive(false);
+                }
+                else if (TriggerIndex == 2)
+                {
+                    triggerController.Collider03.gameObject.SetActive(false);
+                    triggerController.Collider04.gameObject.SetActive(false);
+                }
+                else if (TriggerIndex == 5)
+                {
+                    triggerController.Collider05.gameObject.SetActive(false);
+                    triggerController.Collider06.gameObject.SetActive(false);
+                }
+            }
         }
     }
 
@@ -103,11 +121,11 @@ public class EnemyManager : MonoBehaviour
 
         activeEnemies.Add(newEnemy);
 
-        Enemy enemyScript = newEnemy.GetComponent<Enemy>();
+        /*Enemy enemyScript = newEnemy.GetComponent<Enemy>();
         if (enemyScript != null)
         {
             enemyScript.OnDeath += () => RemoveEnemyFromList(newEnemy);
-        }
+        }*/
     }
 
     /// <summary>
