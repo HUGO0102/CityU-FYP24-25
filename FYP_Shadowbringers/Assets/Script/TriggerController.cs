@@ -5,6 +5,7 @@ using UnityEngine;
 public class TriggerController : MonoBehaviour
 {
     public EnemyManager enemyController;
+    //public EquipScript equip;
     public int triggerIndex;
 
     public bool beatStart = false;
@@ -18,6 +19,7 @@ public class TriggerController : MonoBehaviour
     [Header("Animation")]
     public Animator Door01;
     public Animator Gate01;
+    public Animator Gate02;
 
     [Header("GameObject")]
     public GameObject AttackTips;
@@ -62,13 +64,18 @@ public class TriggerController : MonoBehaviour
 
             if (triggerIndex == 2)
             {
-                BattleArea03.SetActive(true);
-                BattleArea04.SetActive(true);
+                //BattleArea03.SetActive(true);
+                //BattleArea04.SetActive(true);
             }
 
             if (triggerIndex == 3)
             {
                 Gate01.SetBool("Open", true);
+            }
+
+            if (triggerIndex == 4)
+            {
+                Gate02.SetBool("Open", true);
             }
         }
     }
@@ -84,6 +91,11 @@ public class TriggerController : MonoBehaviour
             if (triggerIndex == 3)
             {
                 Gate01.SetBool("Open", false);
+            }
+
+            if (triggerIndex == 4)
+            {
+                Gate02.SetBool("Open", false);
             }
         }
     }

@@ -10,6 +10,9 @@ public class EquipScript : MonoBehaviour
     public float range = 2f;
     public GameObject interactionUI;
     public GameObject Player;
+    public GameObject LabDoorTrigger;
+
+    public bool isEquipped = false;
 
     private bool isWithinRange = false;
 
@@ -96,6 +99,8 @@ public class EquipScript : MonoBehaviour
 
         // Activate the guitar and deactivate the unequipped weapon
         guitar.SetActive(true);
+        LabDoorTrigger.SetActive(true);
+        isEquipped = true;
         if (unequippedWeapon != null)
         {
             unequippedWeapon.SetActive(false);

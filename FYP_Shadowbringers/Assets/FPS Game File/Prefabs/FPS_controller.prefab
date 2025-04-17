@@ -2926,10 +2926,10 @@ MonoBehaviour:
   sprinStepMultipler: 0.6
   myAudioSource: {fileID: 0}
   myAudioClip:
-  - {fileID: 8300000, guid: f8575075864a17f4b986b8a82efb37c6, type: 3}
-  - {fileID: 8300000, guid: 75fa6a53e9cac2d40b0171104bcd470f, type: 3}
-  - {fileID: 8300000, guid: d2a11f8505e0e504596d09dc78dceb30, type: 3}
-  - {fileID: 8300000, guid: 269a447a944dfca40954d5511014b1b9, type: 3}
+  - {fileID: 8300000, guid: f6285cb56b4aa9f4a9bcecb95a14fb75, type: 3}
+  - {fileID: 8300000, guid: df7dc178bf1d8d044b3dffe4f4f514f6, type: 3}
+  - {fileID: 8300000, guid: 4a091f9a1ed3fea4da64160cea40fb0f, type: 3}
+  - {fileID: 8300000, guid: 6ef396259d4432f45b64bf887e278072, type: 3}
   volumeChangeMultiplier: 0.2
   pitchChangeMultiplier: 0.2
   useFootsteps: 1

@@ -12,7 +12,7 @@ public class BeatVisualizer : MonoBehaviour
     [SerializeField] private Transform _centerPoint; // The center position for beat bars
     [SerializeField] private Canvas canvas;
 
-    public TriggerController triggerControl;
+    //public TriggerController triggerControl;
 
     private bool barSpawned = false;
     private void Start()
@@ -22,7 +22,7 @@ public class BeatVisualizer : MonoBehaviour
 
     private void Update()
     {
-        if (_beatManager.inBeat && !barSpawned && triggerControl.beatStart == true)
+        if (_beatManager.inBeat && !barSpawned)
         {
             SpawnBar(_leftSpawnPoint.position, Vector3.right, false);
             SpawnBar(_rightSpawnPoint.position, Vector3.left, true);
