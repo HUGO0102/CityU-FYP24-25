@@ -7,8 +7,9 @@ public class TriggerController : MonoBehaviour
     public EnemyManager enemyController;
     //public EquipScript equip;
     public int triggerIndex;
+    public GameObject beatUI;
 
-    public bool beatStart = false;
+    //public bool beatStart = false;
 
     /*[Header("Trigger")]
     public bool isDoorTrigger01;
@@ -28,10 +29,13 @@ public class TriggerController : MonoBehaviour
     public GameObject BattleArea03;
     public GameObject BattleArea04;
 
+    public bool canSpawn1;
+    public bool canSpawn2;
+    public bool canSpawn4;
     // Start is called before the first frame update
     void Start()
     {
-        
+        beatUI.SetActive(false);
     }
 
     // Update is called once per frame
@@ -56,8 +60,10 @@ public class TriggerController : MonoBehaviour
 
             if (triggerIndex == 1)
             {
-                beatStart = true;
+                beatUI.SetActive(true);
                 AttackTips.SetActive(true);
+
+                canSpawn1 = true;
                 //BattleArea01.SetActive(true);
                 //BattleArea02.SetActive(true);
             }
@@ -66,6 +72,7 @@ public class TriggerController : MonoBehaviour
             {
                 //BattleArea03.SetActive(true);
                 //BattleArea04.SetActive(true);
+                canSpawn2 = true;
             }
 
             if (triggerIndex == 3)
@@ -76,6 +83,8 @@ public class TriggerController : MonoBehaviour
             if (triggerIndex == 4)
             {
                 Gate02.SetBool("Open", true);
+
+                canSpawn4 = true;
             }
         }
     }
