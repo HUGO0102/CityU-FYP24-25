@@ -330,11 +330,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3cd1828d047bfe2449fda7617cae6f5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 0}
+  player: {fileID: 7762458210331608006, guid: 4380519593051d94a9430bbbdd824d10, type: 3}
   originalSpeed: 0
   originalJumpF: 0
   originalSprint: 0
-  slowValue: 2
+  speedMultiplier: 2
 --- !u!82 &9187475797641791944
 AudioSource:
   m_ObjectHideFlags: 0

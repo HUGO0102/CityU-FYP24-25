@@ -17,6 +17,9 @@ TagManager:
   - Shield
   - SniperBullets
   - Pickable
+  - Footsteps/Concrete
+  - Footsteps/Stone
+  - Footsteps/Metal
   layers:
   - Default
   - TransparentFX
@@ -24,11 +27,11 @@ TagManager:
   - 
   - Water
   - UI
-  - Ground
-  - Player
+  - 
+  - 
   - Enemy
-  - 
-  - 
+  - whatIsGround
+  - whatIsPlayer
   - PlayerBulletLayer
   - EnemyBulletLayer
   - 

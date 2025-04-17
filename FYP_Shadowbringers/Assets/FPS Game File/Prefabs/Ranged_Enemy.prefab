@@ -9531,7 +9531,7 @@ MonoBehaviour:
   health: 120
   whatIsGround:
     serializedVersion: 2
-    m_Bits: 4160
+    m_Bits: 4672
   whatIsPlayer:
     serializedVersion: 2
     m_Bits: 8320

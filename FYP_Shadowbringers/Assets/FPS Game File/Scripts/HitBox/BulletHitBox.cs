@@ -5,6 +5,21 @@ public class BulletHitBox : MonoBehaviour
     [SerializeField] private ParticleSystem hitEffect; // 擊中敵人或玩家的效果
     [SerializeField] private ParticleSystem shieldHitEffect; // 擊中護盾的效果
 
+    // 層索引（僅用於 whatIsGround）
+    private int whatIsGroundLayer;
+
+    private void Awake()
+    {
+        // 初始化 whatIsGround 層索引
+        whatIsGroundLayer = LayerMask.NameToLayer("whatIsGround");
+
+        // 檢查層是否存在
+        if (whatIsGroundLayer == -1)
+        {
+            Debug.LogError("Layer 'whatIsGround' not found!");
+        }
+    }
+
     // 處理玩家子彈的物理碰撞（使用 OnCollisionEnter）
     private void OnCollisionEnter(Collision collision)
     {
@@ -31,7 +46,7 @@ public class BulletHitBox : MonoBehaviour
                 }
                 ReturnToPool();
             }
-            else if(collision.gameObject.CompareTag("Untagged"))
+            else if (collision.gameObject.CompareTag("Untagged") || collision.gameObject.layer == whatIsGroundLayer)
             {
                 ReturnToPool();
             }
@@ -64,7 +79,7 @@ public class BulletHitBox : MonoBehaviour
                 }
                 ReturnToPool();
             }
-            else if (other.gameObject.CompareTag("Wall")) // 添加對牆壁的檢測
+            else if (other.gameObject.layer == whatIsGroundLayer) // 添加對 whatIsGround 層的檢測
             {
                 if (hitEffect != null)
                 {

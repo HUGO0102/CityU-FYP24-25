@@ -114,20 +114,21 @@ public class SettingsManager : MonoBehaviour
         initialMouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 1f);
         initialMasterVolume = PlayerPrefs.GetFloat("MasterVolume", 100f);
         initialEffectVolume = PlayerPrefs.GetFloat("EffectVolume", 100f);
+        initialBGMusicVolume = PlayerPrefs.GetFloat("BGMusicVolume", 100f);
 
-        // 檢查是否是第一次載入（即 PlayerPrefs 中不存在 BGMusicVolume 鍵）
-        if (!PlayerPrefs.HasKey("BGMusicVolume"))
-        {
-            // 如果是第一次載入，強制設為 100
-            initialBGMusicVolume = 100f;
-            PlayerPrefs.SetFloat("BGMusicVolume", initialBGMusicVolume);
-            PlayerPrefs.Save();
-        }
-        else
-        {
-            // 否則載入保存的值
-            initialBGMusicVolume = PlayerPrefs.GetFloat("BGMusicVolume", 100f);
-        }
+        //// 檢查是否是第一次載入（即 PlayerPrefs 中不存在 BGMusicVolume 鍵）
+        //if (!PlayerPrefs.HasKey("BGMusicVolume"))
+        //{
+        //    // 如果是第一次載入，強制設為 100
+        //    initialBGMusicVolume = 100f;
+        //    PlayerPrefs.SetFloat("BGMusicVolume", initialBGMusicVolume);
+        //    PlayerPrefs.Save();
+        //}
+        //else
+        //{
+        //    // 否則載入保存的值
+        //    initialBGMusicVolume = PlayerPrefs.GetFloat("BGMusicVolume", 100f);
+        //}
 
         initialFov = PlayerPrefs.GetFloat("FOV", 80f);
     }

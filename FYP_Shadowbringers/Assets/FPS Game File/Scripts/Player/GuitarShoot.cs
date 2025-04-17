@@ -24,7 +24,8 @@ public class GuitarShoot : MonoBehaviour
 
     [Header("Sound")]
     public AudioSource source;
-    public AudioClip[] fireSounds; // 修改為陣列，包含 7 個射擊音效
+    public AudioClip[] fireSounds; // 普通射擊音效陣列
+    public AudioClip[] hitOnBeatSounds; // HitOnBeat 時的特別音效陣列
 
     [SerializeField] private Animator playerAnimator; // 玩家的 Animator 組件
     private GameObject player; // 引用玩家遊戲對象
@@ -58,6 +59,10 @@ public class GuitarShoot : MonoBehaviour
         if (fireSounds == null || fireSounds.Length == 0)
         {
             Debug.LogWarning("Fire Sounds array is empty or not assigned!");
+        }
+        if (hitOnBeatSounds == null || hitOnBeatSounds.Length == 0)
+        {
+            Debug.LogWarning("Hit On Beat Sounds array is empty or not assigned!");
         }
     }
 
@@ -180,17 +185,18 @@ public class GuitarShoot : MonoBehaviour
 
         Debug.Log($"Shoot called with hitOnBeat: {hitOnBeat}");
 
-        // 播放隨機射擊音效
-        if (source != null && fireSounds != null && fireSounds.Length > 0)
+        // 根據 HitOnBeat 選擇音效陣列
+        AudioClip[] selectedSounds = hitOnBeat ? hitOnBeatSounds : fireSounds;
+        if (source != null && selectedSounds != null && selectedSounds.Length > 0)
         {
-            int randomIndex = Random.Range(0, fireSounds.Length); // 隨機選擇一個音效
-            AudioClip selectedSound = fireSounds[randomIndex];
+            int randomIndex = Random.Range(0, selectedSounds.Length); // 隨機選擇一個音效
+            AudioClip selectedSound = selectedSounds[randomIndex];
             source.PlayOneShot(selectedSound);
-            //Debug.Log($"Playing fire sound: {selectedSound.name}");
+            Debug.Log($"Playing {(hitOnBeat ? "HitOnBeat" : "Normal")} fire sound: {selectedSound.name}");
         }
         else
         {
-            Debug.LogWarning("AudioSource or Fire Sounds array is not properly set!");
+            Debug.LogWarning($"AudioSource or {(hitOnBeat ? "HitOnBeatSounds" : "FireSounds")} array is not properly set!");
         }
 
         // 從池中獲取 VFX 並從 Barrel_Location 播放
