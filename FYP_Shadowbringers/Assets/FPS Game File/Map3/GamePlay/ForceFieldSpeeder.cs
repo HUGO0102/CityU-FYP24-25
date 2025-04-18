@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ForceFieldSpeeder : MonoBehaviour
@@ -9,6 +7,7 @@ public class ForceFieldSpeeder : MonoBehaviour
     public float originalJumpF;
     public float originalSprint;
     public float speedMultiplier = 2f; // 加速倍數，例如 2 表示速度和跳躍高度加倍
+    public float jumpspeedMultiplier = 2f;
 
     public void Awake()
     {
@@ -42,7 +41,7 @@ public class ForceFieldSpeeder : MonoBehaviour
         // 應用加速效果（包括速度和跳躍高度）
         pm.currentSpeed = originalSpeed * speedMultiplier;
         pm.runSpeed = originalSprint * speedMultiplier;
-        pm.jumpHeight = originalJumpF * speedMultiplier * 2;
+        pm.jumpHeight = originalJumpF * jumpspeedMultiplier;
         pm.useFootsteps = false;
 
         Debug.Log($"Player entered SpeedForceField: Speed increased to {pm.currentSpeed}, Run Speed: {pm.runSpeed}, Jump Height: {pm.jumpHeight}");
@@ -63,13 +62,13 @@ public class ForceFieldSpeeder : MonoBehaviour
             return;
         }
 
-        // 恢復原始速度和跳躍高度
-        pm.currentSpeed = originalSpeed;
-        pm.speed = originalSpeed;
+        // 不恢復原始速度，保留當前速度以保持慣性
+        // 僅恢復跑步速度和跳躍高度
+        pm.speed = originalSpeed; // 恢復基礎速度，但不影響當前速度
         pm.runSpeed = originalSprint;
         pm.jumpHeight = originalJumpF;
         pm.useFootsteps = true;
 
-        Debug.Log($"Player exited SpeedForceField: Speed restored to {pm.speed}, Run Speed: {pm.runSpeed}, Jump Height: {pm.jumpHeight}");
+        Debug.Log($"Player exited SpeedForceField: Current Speed retained at {pm.currentSpeed}, Run Speed: {pm.runSpeed}, Jump Height: {pm.jumpHeight}");
     }
 }

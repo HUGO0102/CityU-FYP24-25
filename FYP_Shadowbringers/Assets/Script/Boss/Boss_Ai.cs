@@ -27,6 +27,8 @@ public class Boss_Ai : MonoBehaviour
     bool isBothShooting;
     bool isFall;
 
+
+
     public GameObject DestroyObj;
 
     // Stats
@@ -188,7 +190,7 @@ public class Boss_Ai : MonoBehaviour
     [SerializeField] private int defaultShieldHealth = 100; // 非低血量時的護盾血量
     [SerializeField] private int lowHealthShieldHealth = 200; // 低血量時的護盾血量
     [SerializeField] private int maxShieldHealth = 100; // 護盾最大血量（初始值）
-    private int shieldHealth; // 當前護盾血量
+    [SerializeField] private int shieldHealth; // 當前護盾血量
     private bool isShieldActive = false; // 護盾是否激活
     private bool isShieldOnCooldown = false; // 護盾是否在冷卻中
     private Coroutine shieldDeactivationCoroutine; // 護盾禁用協程
@@ -432,8 +434,8 @@ public class Boss_Ai : MonoBehaviour
     {
         animator.SetBool("Idle", isIdle);
         animator.SetBool("Walking", isWalking);
-        animator.SetBool("Attack", isAttack);
-        animator.SetBool("Hit", isHit);
+        //animator.SetBool("Attack", isAttack);
+        //animator.SetBool("Hit", isHit);
         animator.SetBool("isMissileAttack", isMissileAttack);
         animator.SetBool("isR_Shooting", isR_Shooting);
         animator.SetBool("isL_Shooting", isL_Shooting);

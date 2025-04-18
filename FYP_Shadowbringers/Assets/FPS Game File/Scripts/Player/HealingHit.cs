@@ -5,14 +5,13 @@ using UnityEngine;
 public class HealingHit : MonoBehaviour
 {
     public PlayerHealth Health;
+    public GameObject gameObj;
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Trap")
+        if (other.gameObject.tag == "Player")
         {
-            Debug.Log("Trap Hit");
-            Health.RestoreHealth(30);
-            Destroy(gameObject);
+            Destroy(gameObj);
         }
     }
 }

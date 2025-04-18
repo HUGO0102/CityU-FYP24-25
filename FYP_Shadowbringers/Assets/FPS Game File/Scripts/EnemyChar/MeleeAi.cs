@@ -70,7 +70,7 @@ public class MeleeAi : MonoBehaviour
 
     private void Awake()
     {
-        player = GameObject.Find("Player").transform;
+        player = GameObject.Find("FPS_controller").transform;
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
 

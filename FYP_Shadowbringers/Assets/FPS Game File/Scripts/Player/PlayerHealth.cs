@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +20,7 @@ public class PlayerHealth : MonoBehaviour
     public float fadeSpeed; // how quickly the image will fade
 
     private float durationTimer; // timer to check against the duration
+    public event Action OnDeath; // 新增死亡事件
 
     void Start()
     {
@@ -94,11 +94,34 @@ public class PlayerHealth : MonoBehaviour
         lerpTimer = 0f;
         durationTimer = 0;
         overlay.color = new Color(overlay.color.r, overlay.color.g, overlay.color.b, 1);
+
+        // 檢查血量是否降為 0
+        if (health <= 0)
+        {
+            health = 0;
+            OnDeath?.Invoke(); // 觸發死亡事件
+            Debug.Log("Player died");
+        }
     }
 
     public void RestoreHealth(float healAmount)
     {
         health += healAmount;
         lerpTimer = 0f;
+    }
+
+    public void ResetHealth()
+    {
+        health = maxHealth;
+        lerpTimer = 0f;
+        durationTimer = 0;
+        overlay.color = new Color(overlay.color.r, overlay.color.g, overlay.color.b, 0);
+        UpdateHealthUI();
+        Debug.Log("Player health reset");
+    }
+
+    public bool IsDead()
+    {
+        return health <= 0;
     }
 }

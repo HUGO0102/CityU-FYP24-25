@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
+[AddComponentMenu("Nokobot/Instruments/Player Motor")]
 public class PlayerMotor : MonoBehaviour
 {
     private CharacterController controller;
@@ -14,6 +15,7 @@ public class PlayerMotor : MonoBehaviour
     public float currentSpeed = 0;
     public float gravity = -9.8f;
     public float jumpHeight = 1.5f;
+    public float friction = 5f; // 摩擦力，控制慣性減速速度
 
     public bool lerpCrouch;
     public bool crouching;
@@ -73,7 +75,7 @@ public class PlayerMotor : MonoBehaviour
             if (currentStamina <= 0)
             {
                 sprinting = false; // 疲勞耗盡，停止跑步
-                currentSpeed = speed;
+                // 不重置 currentSpeed，讓慣性繼續
             }
         }
         else if (currentStamina < maxStamina)
@@ -104,13 +106,37 @@ public class PlayerMotor : MonoBehaviour
                 crouchTimer = 0f;
             }
         }
+
+        // 如果玩家在地上，且沒有移動輸入，逐漸減速（模擬摩擦）
+        if (isGrounded && moveDirection == Vector3.zero && currentSpeed > 0)
+        {
+            currentSpeed = Mathf.Lerp(currentSpeed, 0, friction * Time.deltaTime);
+            if (currentSpeed < 0.01f)
+            {
+                currentSpeed = 0;
+            }
+        }
     }
 
     public void ProcessMove(Vector2 input)
     {
+        Vector3 previousMoveDirection = moveDirection; // 保存之前的移動方向
         moveDirection = Vector3.zero;
         moveDirection.x = input.x;
         moveDirection.z = input.y;
+
+        // 如果有移動輸入，更新速度
+        if (moveDirection != Vector3.zero)
+        {
+            float targetSpeed = sprinting ? runSpeed : speed;
+            currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, 0.1f); // 平滑過渡到目標速度
+        }
+        else if (!isGrounded)
+        {
+            // 如果玩家在空中，保留之前的移動方向以保持慣性
+            moveDirection = previousMoveDirection;
+        }
+
         controller.Move(transform.TransformDirection(moveDirection) * currentSpeed * Time.deltaTime);
         playerVelocity.y += gravity * Time.deltaTime;
         if (isGrounded && playerVelocity.y < 0)
@@ -156,9 +182,7 @@ public class PlayerMotor : MonoBehaviour
     public void Sprint(bool isPressed)
     {
         sprinting = isPressed;
-        currentSpeed = sprinting ? runSpeed : speed;
-
-        // 通知 Stamina UI 體力可能會改變（例如開始跑步時）
+        // 不直接改變 currentSpeed，讓慣性處理
         if (staminaUI != null)
         {
             staminaUI.OnStaminaChanged();

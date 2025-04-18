@@ -5002,13 +5002,13 @@ MonoBehaviour:
   TargetLooker: {fileID: 7034299307784219041}
   animator: {fileID: 7034299306292114326}
   DestoryObj: {fileID: 7034299306292114321}
-  health: 250
+  health: 150
   whatIsGround:
     serializedVersion: 2
     m_Bits: 4672
   whatIsPlayer:
     serializedVersion: 2
-    m_Bits: 8320
+    m_Bits: 9344
   walkPoint: {x: 0, y: 0, z: 0}
   walkPointSet: 0
   walkPointRange: 5

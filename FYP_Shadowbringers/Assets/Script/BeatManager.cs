@@ -41,12 +41,12 @@ public class BeatManager : MonoBehaviour
     {
         if (Instance == null)
         {
-            DontDestroyOnLoad(gameObject);
+            //DontDestroyOnLoad(gameObject);
             Instance = this;
         }
         else if (Instance != null)
         {
-            Destroy(gameObject);
+            //Destroy(gameObject);
         }
     }
 

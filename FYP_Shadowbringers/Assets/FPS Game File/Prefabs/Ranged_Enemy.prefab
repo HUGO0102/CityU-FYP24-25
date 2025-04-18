@@ -9528,19 +9528,19 @@ MonoBehaviour:
   TargetLooker: {fileID: 1718889492850902185}
   animator: {fileID: 1718889491959424271}
   DestoryObj: {fileID: 1718889491959424257}
-  health: 120
+  health: 100
   whatIsGround:
     serializedVersion: 2
     m_Bits: 4672
   whatIsPlayer:
     serializedVersion: 2
-    m_Bits: 8320
+    m_Bits: 9344
   walkPoint: {x: 0, y: 0, z: 0}
   walkPointSet: 0
   walkPointRange: 5
   timeBetweenAttacks: 3
   isDead: 0
-  sightRange: 16
+  sightRange: 13
   attackRange: 10
   playerInSightRange: 0
   playerInAttackRange: 0

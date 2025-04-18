@@ -79,15 +79,15 @@ public class BulletHitBox : MonoBehaviour
                 }
                 ReturnToPool();
             }
-            else if (other.gameObject.layer == whatIsGroundLayer) // 添加對 whatIsGround 層的檢測
-            {
-                if (hitEffect != null)
-                {
-                    ParticleSystem effect = Instantiate(hitEffect, transform.position, Quaternion.identity);
-                    Destroy(effect.gameObject, effect.main.duration);
-                }
-                ReturnToPool();
-            }
+            //else if (other.gameObject.layer == whatIsGroundLayer) // 添加對 whatIsGround 層的檢測
+            //{
+            //    if (hitEffect != null)
+            //    {
+            //        ParticleSystem effect = Instantiate(hitEffect, transform.position, Quaternion.identity);
+            //        Destroy(effect.gameObject, effect.main.duration);
+            //    }
+            //    ReturnToPool();
+            //}
         }
     }
 
@@ -100,7 +100,7 @@ public class BulletHitBox : MonoBehaviour
             {
                 BulletPoolManager.Instance.ReturnPlayerBullet(gameObject);
             }
-            else if (gameObject.CompareTag("EnemyBullets") || gameObject.CompareTag("Sniper_Bullet"))
+            else if (gameObject.CompareTag("EnemyBullets") || gameObject.CompareTag("SniperBullets"))
             {
                 BulletPoolManager.Instance.ReturnEnemyBullet(gameObject);
             }

@@ -14,5 +14,12 @@ public class TrapHit : MonoBehaviour
             Debug.Log("Trap Hit");
             Health.TakeDamage(30);
         }
+
+
+        if (other.gameObject.tag == "HealPop")
+        {
+            Debug.Log("Trap Hit");
+            Health.RestoreHealth(30);
+        }
     }
 }

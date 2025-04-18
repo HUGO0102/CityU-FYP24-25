@@ -20,6 +20,10 @@ TagManager:
   - Footsteps/Concrete
   - Footsteps/Stone
   - Footsteps/Metal
+  - HealPop
+  - PlayerBrustBullets
+  - PostVolume
+  - RecordCam
   layers:
   - Default
   - TransparentFX

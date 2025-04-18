@@ -1,7 +1,6 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.AI;
-using static UnityEngine.GraphicsBuffer;
+
 public class ShootingAi : MonoBehaviour
 {
     public NavMeshAgent agent;
@@ -11,8 +10,7 @@ public class ShootingAi : MonoBehaviour
     private MeshRenderer meshRenderer;
     public Animator animator;
 
-
-    //Animation bool
+    // Animation bool
     bool isIdle;
     bool isChase;
     bool isAttack;
@@ -24,39 +22,37 @@ public class ShootingAi : MonoBehaviour
 
     public GameObject DestoryObj;
 
-    //Stats
+    // Stats
     public int health;
 
-    //Check for Ground/Obstacles
+    // Check for Ground/Obstacles
     public LayerMask whatIsGround, whatIsPlayer;
 
-    //Patroling
+    // Patroling
     public Vector3 walkPoint;
     public bool walkPointSet;
     public float walkPointRange;
 
-    //Attack Player
+    // Attack Player
     public float timeBetweenAttacks;
-    bool alreadyAttacked;
+    public bool alreadyAttacked;
     bool hited;
 
-    //States
+    // States
     public bool isDead;
     public float sightRange, attackRange;
     public bool playerInSightRange, playerInAttackRange;
 
-
     private TargetLooker targetLooker;
     private Vector3 targetPostition;
 
-    //VFX
+    // VFX
     [Header("VFX")]
     public ParticleSystem spark;
     public ParticleSystem onHitVFX;
     bool vfxIsCreated = false;
 
     private ParticleSystem onHitVFXInstance;
-
 
     [Header("Prefab Refrences")]
     public GameObject muzzleFlashPrefab;
@@ -68,7 +64,7 @@ public class ShootingAi : MonoBehaviour
     [Tooltip("Specify time to destory the casing object")][SerializeField] private float destroyTimer = 2f;
     [Tooltip("Bullet Speed")][SerializeField] private float shotPower = 500f;
 
-    //SFX
+    // SFX
     [Header("SoundFX")]
     public AudioSource gunAudioSource;
     public AudioSource enemyAudioSource;
@@ -79,10 +75,9 @@ public class ShootingAi : MonoBehaviour
     [Range(0.1f, 0.5f)]
     public float pitchChangeMultiplier = 0.2f;
 
-
     private void Awake()
     {
-        player = GameObject.Find("Player").transform;
+        player = GameObject.Find("FPS_controller").transform;
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
 
@@ -91,39 +86,39 @@ public class ShootingAi : MonoBehaviour
 
         if (targetLooker == null)
             targetLooker = GetComponentInChildren<TargetLooker>();
-
-        
     }
+
     private void Update()
     {
         SwitchAnimation();
 
         if (!isDead)
         {
-            //Check if Player in sightrange
+            // Check if Player in sightrange
             playerInSightRange = Physics.CheckSphere(transform.position, sightRange, whatIsPlayer);
 
-            //Check if Player in attackrange
+            // Check if Player in attackrange
             playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, whatIsPlayer);
 
             targetPostition = new Vector3(player.position.x, this.transform.position.y, player.position.z);
 
-            if (!playerInSightRange && !playerInAttackRange && !alreadyAttacked)
+            // 如果玩家不在視野範圍和攻擊範圍內，重置攻擊狀態
+            if (!playerInSightRange && !playerInAttackRange)
             {
+                alreadyAttacked = false; // 重置攻擊狀態
                 isIdle = false;
                 isAttack = false;
                 isChase = true;
                 Patroling();
             }
-            if (playerInSightRange && !playerInAttackRange && !alreadyAttacked)
+            else if (playerInSightRange && !playerInAttackRange && !alreadyAttacked)
             {
-
                 isIdle = false;
                 isAttack = false;
                 isChase = true;
                 ChasePlayer();
             }
-            if (playerInAttackRange && playerInSightRange)
+            else if (playerInAttackRange && playerInSightRange)
             {
                 isChase = false;
                 isIdle = false;
@@ -152,23 +147,20 @@ public class ShootingAi : MonoBehaviour
 
         if (!walkPointSet) SearchWalkPoint();
 
-        //Calculate direction and walk to Point
-        if (walkPointSet){
+        // Calculate direction and walk to Point
+        if (walkPointSet)
+        {
             agent.SetDestination(walkPoint);
-
-            //Vector3 direction = walkPoint - transform.position;
-            //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 0.15f);
         }
 
-        //Calculates DistanceToWalkPoint
+        // Calculates DistanceToWalkPoint
         Vector3 distanceToWalkPoint = transform.position - walkPoint;
 
-        //Walkpoint reached
+        // Walkpoint reached
         if (distanceToWalkPoint.magnitude < 1f)
             walkPointSet = false;
-
-
     }
+
     private void SearchWalkPoint()
     {
         if (targetLooker != null)
@@ -179,9 +171,10 @@ public class ShootingAi : MonoBehaviour
 
         walkPoint = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
 
-        if (Physics.Raycast(walkPoint,-transform.up, 2,whatIsGround))
-        walkPointSet = true;
+        if (Physics.Raycast(walkPoint, -transform.up, 2, whatIsGround))
+            walkPointSet = true;
     }
+
     private void ChasePlayer()
     {
         if (isDead) return;
@@ -192,8 +185,8 @@ public class ShootingAi : MonoBehaviour
             TargetLooker.GetComponent<TargetLooker>().targetTrans = player;
 
         agent.SetDestination(player.position);
-
     }
+
     private void AttackPlayer()
     {
         if (isDead) return;
@@ -201,9 +194,9 @@ public class ShootingAi : MonoBehaviour
         agent.speed = 2f;
 
         if (targetLooker != null)
-        TargetLooker.GetComponent<TargetLooker>().targetTrans = player;
+            TargetLooker.GetComponent<TargetLooker>().targetTrans = player;
 
-        //Make sure enemy doesn't move
+        // Make sure enemy doesn't move
         agent.SetDestination(transform.position);
 
         transform.LookAt(targetPostition);
@@ -211,13 +204,13 @@ public class ShootingAi : MonoBehaviour
         if (!alreadyAttacked)
         {
             if (animator != null)
-                alreadyAttacked = true;      
+            {
+                alreadyAttacked = true;
+                Invoke("ResetAttack", timeBetweenAttacks); // 重置攻擊狀態
+            }
         }
-
-
-
-        
     }
+
     private void ResetAttack()
     {
         if (isDead) return;
@@ -234,16 +227,15 @@ public class ShootingAi : MonoBehaviour
     {
         hited = true;
 
-        //SFX
+        // SFX
         AudioClip ramdomSFX = enemyAudioClip[Random.Range(0, 3)];
         enemyAudioSource.volume = Random.Range(1 - volumeChangeMultiplier, 1);
         enemyAudioSource.pitch = Random.Range(1 - pitchChangeMultiplier, 1 + pitchChangeMultiplier);
         enemyAudioSource.PlayOneShot(ramdomSFX);
 
-
         if (animator != null)
         {
-            //VFX
+            // VFX
             if (!vfxIsCreated)
             {
                 if (onHitVFX != null)
@@ -254,21 +246,20 @@ public class ShootingAi : MonoBehaviour
 
             animator.SetTrigger("isHited");
         }
-        
 
         health -= damage;
-        Debug.Log("Enemy Health" + health);
-        if (health <= 0){
+        Debug.Log("Enemy Health: " + health);
+        if (health <= 0)
+        {
             isDead = true;
-            //Invoke("Destroy", 2.8f);
 
             if (animator != null)
             {
-              DestroyAnimation();
+                DestroyAnimation();
             }
-            
         }
     }
+
     private void DestroyAnimation()
     {
         gameObject.GetComponent<NavMeshAgent>().enabled = false;
@@ -276,16 +267,14 @@ public class ShootingAi : MonoBehaviour
 
         enemyAudioSource.PlayOneShot(enemyAudioClip[4]);
 
-        //VFX
+        // VFX
         if (!vfxIsCreated)
         {
             Instantiate(spark, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), transform.rotation);
             vfxIsCreated = true;
         }
 
-
-
-        //Delay 10sec
+        // Delay 10sec
         Invoke("DestoryObject", 10);
     }
 
@@ -293,7 +282,6 @@ public class ShootingAi : MonoBehaviour
     {
         Destroy(DestoryObj);
     }
-
 
     public void Shoot()
     {
@@ -316,7 +304,6 @@ public class ShootingAi : MonoBehaviour
         rb.velocity = Vector3.zero;
         rb.AddForce(barrelLocation.forward * shotPower);
     }
-
 
     private void OnDrawGizmos()
     {

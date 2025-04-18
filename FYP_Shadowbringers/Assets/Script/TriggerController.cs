@@ -97,7 +97,7 @@ public class TriggerController : MonoBehaviour
 
             if (triggerIndex == 5)
             {
-                Gate02.SetBool("Open", true);
+                //Gate02.SetBool("Open", true);
                 BattleArea05.SetActive(true);
                 BattleArea06.SetActive(true);
                 canSpawn4 = true;
