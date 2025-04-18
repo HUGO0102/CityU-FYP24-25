@@ -7,7 +7,8 @@ using UnityEngine.InputSystem;
 public class GuitarShoot : MonoBehaviour
 {
     [Header("Prefab References")]
-    public GameObject bulletPrefab; // 子彈預製體
+    public GameObject bulletPrefab; // 普通子彈預製體
+    public GameObject burstBulletPrefab; // HitOnBeat 子彈預製體
     public GameObject vfxPrefab; // Barrel_Location 的 VFX Prefab
     public GameObject vfxBurstPrefab; // VFXBurst_Point 的 VFX Prefab
 
@@ -168,28 +169,25 @@ public class GuitarShoot : MonoBehaviour
         }
     }
 
-    // 執行射擊邏輯，接受 HitOnBeat 條件
     public void Shoot(bool hitOnBeat = false)
     {
-        if (Time.timeScale == 0f) // 檢查遊戲是否暫停
+        if (Time.timeScale == 0f)
         {
             Debug.Log("Game is paused, cannot shoot!");
-            return; // 如果遊戲暫停，阻止射擊
+            return;
         }
 
-        // 檢查射擊頻率
         if (Time.time < nextFireTime)
         {
-            return; // 如果未到下一次射擊時間，退出
+            return;
         }
 
         Debug.Log($"Shoot called with hitOnBeat: {hitOnBeat}");
 
-        // 根據 HitOnBeat 選擇音效陣列
         AudioClip[] selectedSounds = hitOnBeat ? hitOnBeatSounds : fireSounds;
         if (source != null && selectedSounds != null && selectedSounds.Length > 0)
         {
-            int randomIndex = Random.Range(0, selectedSounds.Length); // 隨機選擇一個音效
+            int randomIndex = Random.Range(0, selectedSounds.Length);
             AudioClip selectedSound = selectedSounds[randomIndex];
             source.PlayOneShot(selectedSound);
             Debug.Log($"Playing {(hitOnBeat ? "HitOnBeat" : "Normal")} fire sound: {selectedSound.name}");
@@ -199,7 +197,6 @@ public class GuitarShoot : MonoBehaviour
             Debug.LogWarning($"AudioSource or {(hitOnBeat ? "HitOnBeatSounds" : "FireSounds")} array is not properly set!");
         }
 
-        // 從池中獲取 VFX 並從 Barrel_Location 播放
         GameObject vfx = GetVFXFromPool();
         if (vfx != null)
         {
@@ -212,7 +209,6 @@ public class GuitarShoot : MonoBehaviour
             Debug.LogWarning("No available VFX in pool for Barrel_Location!");
         }
 
-        // 如果 HitOnBeat，額外從 VFXBurst_Point 播放 VFX
         if (hitOnBeat && vfxBurstPoint != null)
         {
             Debug.Log("HitOnBeat triggered, playing VFXBurst_Point");
@@ -229,27 +225,24 @@ public class GuitarShoot : MonoBehaviour
             }
         }
 
-        // 從 BulletPoolManager 獲取子彈
-        GameObject bullet = BulletPoolManager.Instance.GetPlayerBullet();
+        // 從 BulletPoolManager 獲取子彈，並傳遞 hitOnBeat
+        GameObject bullet = BulletPoolManager.Instance.GetPlayerBullet(hitOnBeat);
         if (bullet != null)
         {
             bullet.SetActive(true);
             bullet.transform.position = barrelLocation.position;
 
-            // 計算準心位置並設置子彈方向與旋轉
             Vector3 aimPoint = GetAimPoint();
             if (aimPoint != Vector3.zero)
             {
                 Vector3 shootDirection = (aimPoint - barrelLocation.position).normalized;
-                // 設置子彈的 Rotation 朝向瞄準點
                 bullet.transform.rotation = Quaternion.LookRotation(shootDirection);
-                // 施加力沿著方向發射
                 Rigidbody rb = bullet.GetComponent<Rigidbody>();
                 if (rb != null)
                 {
-                    rb.velocity = Vector3.zero; // 重置線速度
-                    rb.angularVelocity = Vector3.zero; // 重置角速度，防止自轉
-                    rb.AddForce(shootDirection * shotPower); // 根據準心方向施加力
+                    rb.velocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
+                    rb.AddForce(shootDirection * shotPower);
                 }
             }
             else
@@ -258,32 +251,30 @@ public class GuitarShoot : MonoBehaviour
                 Rigidbody rb = bullet.GetComponent<Rigidbody>();
                 if (rb != null)
                 {
-                    bullet.transform.rotation = Quaternion.LookRotation(barrelLocation.forward); // 備用旋轉
+                    bullet.transform.rotation = Quaternion.LookRotation(barrelLocation.forward);
                     rb.velocity = Vector3.zero;
                     rb.angularVelocity = Vector3.zero;
-                    rb.AddForce(barrelLocation.forward * shotPower); // 備用：沿前方向射擊
+                    rb.AddForce(barrelLocation.forward * shotPower);
                 }
             }
+
+            Debug.Log($"Bullet fired with tag: {bullet.tag}");
         }
 
-        // 更新下一次射擊時間
         nextFireTime = Time.time + (1f / fireRate);
     }
 
-    // 獲取玩家準心位置
     private Vector3 GetAimPoint()
     {
-        Ray ray = Camera.main.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0)); // 螢幕中心
+        Ray ray = Camera.main.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit))
         {
-            //Debug.Log($"Aim point hit at: {hit.point}"); // 調試日誌
             return hit.point;
         }
         else
         {
-            // 如果未擊中任何東西，返回一個預設遠處點作為備用
             return Camera.main.transform.position + ray.direction * 100f;
         }
     }

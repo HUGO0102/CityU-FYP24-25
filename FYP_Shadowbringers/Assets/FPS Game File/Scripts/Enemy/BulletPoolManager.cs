@@ -11,7 +11,8 @@ public class BulletPoolManager : MonoBehaviour
     private Queue<GameObject> enemyBulletPool = new Queue<GameObject>();
 
     [Header("Player Bullet Pool")]
-    [SerializeField] private GameObject playerBulletPrefab;
+    [SerializeField] private GameObject playerBulletPrefab; // 普通子彈預製體
+    [SerializeField] private GameObject burstBulletPrefab; // HitOnBeat 子彈預製體
     [SerializeField] private int playerPoolSize = 50;
     private Queue<GameObject> playerBulletPool = new Queue<GameObject>();
 
@@ -27,6 +28,7 @@ public class BulletPoolManager : MonoBehaviour
             Destroy(gameObject);
         }
 
+        // 初始化敵人子彈池
         for (int i = 0; i < enemyPoolSize; i++)
         {
             GameObject bullet = Instantiate(enemyBulletPrefab);
@@ -34,10 +36,12 @@ public class BulletPoolManager : MonoBehaviour
             enemyBulletPool.Enqueue(bullet);
         }
 
+        // 初始化玩家子彈池（初始使用普通子彈）
         for (int i = 0; i < playerPoolSize; i++)
         {
             GameObject bullet = Instantiate(playerBulletPrefab);
             bullet.SetActive(false);
+            bullet.tag = "PlayerBullets"; // 初始標籤
             playerBulletPool.Enqueue(bullet);
         }
     }
@@ -54,22 +58,27 @@ public class BulletPoolManager : MonoBehaviour
         }
 
         GameObject newBullet = Instantiate(enemyBulletPrefab);
+        newBullet.SetActive(false);
         enemyBulletPool.Enqueue(newBullet);
         return newBullet;
     }
 
-    public GameObject GetPlayerBullet()
+    public GameObject GetPlayerBullet(bool hitOnBeat = false)
     {
         while (playerBulletPool.Count > 0)
         {
             GameObject bullet = playerBulletPool.Dequeue();
             if (bullet != null)
             {
+                bullet.tag = hitOnBeat ? "PlayerBrustBullets" : "PlayerBullets";
                 return bullet;
             }
         }
 
-        GameObject newBullet = Instantiate(playerBulletPrefab);
+        // 如果池中無可用子彈，根據 hitOnBeat 創建新子彈
+        GameObject newBullet = Instantiate(hitOnBeat ? burstBulletPrefab : playerBulletPrefab);
+        newBullet.tag = hitOnBeat ? "PlayerBrustBullets" : "PlayerBullets";
+        newBullet.SetActive(false);
         playerBulletPool.Enqueue(newBullet);
         return newBullet;
     }
@@ -91,6 +100,7 @@ public class BulletPoolManager : MonoBehaviour
         if (bullet != null)
         {
             bullet.SetActive(false);
+            bullet.tag = "PlayerBullets"; // 重置標籤為普通子彈
             if (!playerBulletPool.Contains(bullet))
             {
                 playerBulletPool.Enqueue(bullet);

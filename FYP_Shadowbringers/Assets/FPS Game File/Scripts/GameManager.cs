@@ -81,7 +81,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Death UI 未分配在 GameManager 中！");
+            //Debug.LogError("Death UI 未分配在 GameManager 中！");
         }
 
         if (winGameUI != null)
@@ -90,7 +90,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Win Game UI 未分配在 GameManager 中！");
+            //Debug.LogError("Win Game UI 未分配在 GameManager 中！");
         }
 
         if (settingsManager == null)

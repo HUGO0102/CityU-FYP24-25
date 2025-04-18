@@ -24,8 +24,21 @@ public class BulletHitBoss : MonoBehaviour
         {
             if (EnemyHealth != null)
             {      
-                    EnemyHealth.TakeDamage(20);
+                    EnemyHealth.TakeDamage(10);
                     Debug.Log("Hit Boss with Player Bullet");
+            }
+            else
+            {
+                Debug.LogWarning("EnemyHealth is null, cannot apply damage!");
+            }
+        }
+
+        if (collision.gameObject.tag == "PlayerBrustBullets")
+        {
+            if (EnemyHealth != null)
+            {
+                EnemyHealth.TakeDamage(25);
+                Debug.Log("Hit Boss with Player Bullet");
             }
             else
             {

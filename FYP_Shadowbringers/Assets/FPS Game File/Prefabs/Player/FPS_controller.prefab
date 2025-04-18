@@ -3099,7 +3099,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7bfdecaf3dbf4748bfc52136cbdd3b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  distence: 3
+  distance: 3
   mask:
     serializedVersion: 2
     m_Bits: 64
@@ -3181,6 +3181,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bulletPrefab: {fileID: 3262446121043089012, guid: 508a8f3c630424a43a4738532a19bf76,
+    type: 3}
+  burstBulletPrefab: {fileID: 3262446121043089012, guid: 9552f6d3053390547bac7d3ab10721ed,
     type: 3}
   vfxPrefab: {fileID: 0}
   vfxBurstPrefab: {fileID: 4184831820040277122, guid: 1bee58de964145a42bfce895cf98666d,

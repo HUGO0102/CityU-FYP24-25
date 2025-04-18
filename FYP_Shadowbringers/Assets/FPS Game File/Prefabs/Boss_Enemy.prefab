@@ -235,7 +235,7 @@ MonoBehaviour:
     m_Bits: 4672
   whatIsPlayer:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 1152
   walkPoint: {x: 0, y: 0, z: 0}
   walkPointSet: 0
   walkPointRange: 5
@@ -316,6 +316,7 @@ MonoBehaviour:
   defaultShieldHealth: 100
   lowHealthShieldHealth: 200
   maxShieldHealth: 100
+  shieldHealth: 0
   repairVFXPrefab: {fileID: 5649768425786567379}
   headRig: {fileID: 5649768427288898001}
   handRig: {fileID: 5649768426755797982}

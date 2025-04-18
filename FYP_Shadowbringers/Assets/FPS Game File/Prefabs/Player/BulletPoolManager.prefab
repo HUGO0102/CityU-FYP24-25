@@ -49,4 +49,6 @@ MonoBehaviour:
   enemyPoolSize: 50
   playerBulletPrefab: {fileID: 3262446121043089012, guid: 508a8f3c630424a43a4738532a19bf76,
     type: 3}
+  burstBulletPrefab: {fileID: 3262446121043089012, guid: 9552f6d3053390547bac7d3ab10721ed,
+    type: 3}
   playerPoolSize: 50

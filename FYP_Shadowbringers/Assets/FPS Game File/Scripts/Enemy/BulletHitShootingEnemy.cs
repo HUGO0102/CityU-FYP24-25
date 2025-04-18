@@ -10,7 +10,13 @@ public class BulletHitShootingEnemy : MonoBehaviour
     {
         if (collision.gameObject.tag == "PlayerBullets")
         {
-            EnemyHealth.TakeDamage(20);
+            EnemyHealth.TakeDamage(10);
+            Debug.Log("Hit");
+        }
+
+        if (collision.gameObject.tag == "PlayerBrustBullets")
+        {
+            EnemyHealth.TakeDamage(25);
             Debug.Log("Hit");
         }
     }

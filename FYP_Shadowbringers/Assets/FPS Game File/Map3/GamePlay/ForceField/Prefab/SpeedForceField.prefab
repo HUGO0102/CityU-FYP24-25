@@ -335,6 +335,7 @@ MonoBehaviour:
   originalJumpF: 0
   originalSprint: 0
   speedMultiplier: 2
+  jumpspeedMultiplier: 2
 --- !u!82 &9187475797641791944
 AudioSource:
   m_ObjectHideFlags: 0
@@ -344,7 +345,8 @@ AudioSource:
   m_GameObject: {fileID: 9187475797641791938}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 7917797650539642249, guid: 1d7a4069602ba3144a9b90bd4673e4d4,
+    type: 2}
   m_audioClip: {fileID: 8300000, guid: 4a35a02a431f5b048b9fa2377d643b5e, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 1
@@ -355,8 +357,8 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 4.87
-  MaxDistance: 5.26
+  MinDistance: 5.26
+  MaxDistance: 5.260001
   Pan2D: 0
   rolloffMode: 1
   BypassEffects: 0

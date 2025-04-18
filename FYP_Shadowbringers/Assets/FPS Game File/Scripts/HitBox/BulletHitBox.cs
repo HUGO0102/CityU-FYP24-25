@@ -24,7 +24,7 @@ public class BulletHitBox : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         // 僅處理玩家子彈
-        if (gameObject.CompareTag("PlayerBullets"))
+        if (gameObject.CompareTag("PlayerBullets") || gameObject.CompareTag("PlayerBrustBullets"))
         {
             if (collision.gameObject.CompareTag("Enemy"))
             {
