@@ -19,7 +19,7 @@ public class BulletHitShield : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.tag == "PlayerBullets")
+        if (collision.gameObject.tag == "PlayerBullets" || collision.gameObject.tag == "PlayerBrustBullets")
         {
             // ³B²zÅ@¬Þ¶Ë®`
             if (boss != null && boss.IsShieldActive())
