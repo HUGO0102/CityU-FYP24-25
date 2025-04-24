@@ -11,7 +11,7 @@ public class ShieldImpact : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         //Debug.Log("Collision with: " + collision.gameObject.tag);
-        if (collision.gameObject.tag == "PlayerBullets")
+        if (collision.gameObject.tag == "PlayerBullets" || collision.gameObject.tag == "PlayerBrustBullets")
         {
             var ripples = Instantiate(shieldRipples, transform) as GameObject;
             shieldRipplesVFX = ripples.GetComponent<VisualEffect>();
